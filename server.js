@@ -25,11 +25,13 @@ const loginUserController = require('./src/controllers/LoginUserController/Login
 const loginAdminController = require('./src/controllers/LoginAdminController/loginadminController');
 const profileUserController = require('./src/controllers/ProfileController/profileUserConsole');
 const profileController = require('./src/controllers/ProfileController/profileController');
+
 // ===== Nhập các route =====
 const loginRoutes = require('./src/controllers/LoginAdminController/loginAdminRoutes');
 const profileRoutes = require('./src/controllers/ProfileController/profileRoutes');
 const accountsAdminRoutes = require('./src/controllers/AccountsAdminController/accountsAdminRoutes');
 const loginUserRoutes = require('./src/controllers/LoginUserController/loginUserRoutes');
+const loaiPhongRoutes = require('./src/controllers/LoaiPhongController/loaiPhongRoutes');
 
 // ===== Các route công khai =====
 // Route xác thực
@@ -71,6 +73,7 @@ app.get('/api/profileUser/info', profileUserController.getProfileUserInfo); // L
 app.post('/api/profileUser/update', profileUserController.updateProfileUser); // Cập nhật thông tin cá nhân
 app.get('/api/profile/info', checkAdminAuth, profileController.getProfileInfo);
 app.post('/api/profile/update', checkAdminAuth, profileController.updateProfile);
+
 // Routes cho User
 app.use('/api/user', checkUserAuth);
 app.get('/api/user/check-auth', loginUserController.checkAuth);
@@ -88,6 +91,7 @@ app.post('/api/user/logout', (req, res) => {
         res.json({ success: true, message: 'Đăng xuất thành công' });
     });
 });
+
 // Thêm endpoint đăng xuất cho người dùng admin
 app.post('/api/admin/logout', (req, res) => {
     // Hủy session của người dùng
@@ -163,6 +167,14 @@ app.use((req, res, next) => {
         res.setHeader('Content-Type', 'application/javascript'); // Đặt kiểu nội dung cho JavaScript
     }
     next();
+});
+
+// Thêm route API
+app.use('/api/loai-phong', checkAdminAuth, loaiPhongRoutes);
+
+// Thêm route cho trang Quản lý loại phòng
+app.get('/LoaiPhong/QuanLyLoaiPhong.html', checkAdminAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/view/LoaiPhong/QuanLyLoaiPhong.html'));
 });
 
 // ===== Khởi chạy Server =====
