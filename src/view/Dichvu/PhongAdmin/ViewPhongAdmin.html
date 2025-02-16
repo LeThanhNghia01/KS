@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng</title>
+    <link rel="stylesheet" href="../../../css/ViewPhongAdmin.css">
+    <script src="../../../js/ViewPhongAdmin.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+    </div>
+    <div class="container mt-4 table-container">
+        <br /><br /> 
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Danh Sách Phòng</h2>
+            <div>
+                <a href="@Url.Action("TrangChuNV", "HomeNV")" class="btn btn-primary mr-2">Trang Chủ</a>
+                <a href="@Url.Action("CreatePhong", "Phong")" class="btn btn-success">Thêm Phòng</a>
+            </div>
+        </div>
+    
+        <div class="mb-3">
+            @using (Html.BeginForm("ViewPhong", "Phong", FormMethod.Get, new { id = "filterForm" }))
+            {
+                @Html.DropDownList("TinhTrangID", ViewBag.TinhTrangList as SelectList, "Tất cả tình trạng",
+                    new { @class = "form-control", @onchange = "document.getElementById('filterForm').submit();" })
+            }
+        </div>
+    
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Hình Ảnh</th>
+                        <th>Phòng ID</th>
+                        <th>Tình Trạng</th>
+                        <th>Loại Phòng</th>
+                        <th>Giá</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pro in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(pro.ImagePhong))
+                                {
+                                    <img src="@Url.Content(pro.ImagePhong)" class="img-thumbnail" style="width:100px;height:auto" alt="Hình ảnh phòng" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có hình ảnh</span>
+                                }
+                            </td>
+                            <td>@Html.DisplayFor(modelItem => pro.PhongID)</td>
+                            <td>@Html.DisplayFor(modelItem => pro.TinhTrangPhong.TenTinhTrang)</td>
+                            <td>@Html.DisplayFor(modelItem => pro.LoaiPhong.TenLoai)</td>
+                            <td>@Html.DisplayFor(modelItem => pro.Gia)</td>
+                            <td>
+                                <div class="btn-group">
+                                    @Html.ActionLink("Sửa", "EditPhong", new { id = pro.PhongID }, new { @class = "btn btn-primary btn-sm" })
+                                    @Html.ActionLink("Xóa", "DeletePhong", new { id = pro.PhongID }, new { @class = "btn btn-danger btn-sm" })
+                                    @if (pro.IDTinhTrang == 2)
+                                    {
+                                        using (Html.BeginForm("ConfirmRoom", "Phong", FormMethod.Post, new { style = "display:inline" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@pro.PhongID" />
+                                            <button type="submit" class="btn btn-success btn-sm">Xác Nhận</button>
+                                        }
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    
+        <div class="d-flex justify-content-center">
+            @Html.PagedListPager(Model, page => Url.Action("ViewPhong", new { page, TinhTrangID = Request.QueryString["TinhTrangID"] }))
+        </div>
+    </div>
+</body>
+</html>

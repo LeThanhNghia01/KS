@@ -1,0 +1,55 @@
+.card {
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    border: none;
+    margin-top: 20px;
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 20px;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #555;
+}
+
+.form-control {
+    border-radius: 8px;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+}
+
+.form-control:read-only {
+    background-color: #f8f9fa;
+}
+
+.btn {
+    padding: 8px 20px;
+    border-radius: 5px;
+    margin: 0 5px;
+}
+
+.btn i {
+    margin-right: 5px;
+} 
+.user-menu {
+    display: none;
+}
+
+.user-menu.show {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+.dropdown-menu.show {
+    display: block !important;
+}
+
+.nav-item.dropdown:hover .dropdown-menu {
+    display: block;
+}

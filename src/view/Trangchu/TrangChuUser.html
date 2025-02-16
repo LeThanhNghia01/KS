@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../../public/css/headerUser.css">
+    <link rel="stylesheet" href="../../public/css/TrangChuUser.css">
+    <!-- Thứ tự script quan trọng -->
+    <script src="../../public/js/layouts/headerUser.js"></script>
+    <script src="../../public/js/TrangChuUser.js"></script>
+    <script type="module" src="../../public/js/auth/checkUserAuth.js"></script>
+</head>
+<body>
+    <div id="headerUser-placeholder"></div>
+       <!-- Hero -->
+  <section class="et-hero-tabs">
+    <h1>thêm slider vào sau</h1>
+    <h3>Sliding content with sticky tab nav</h3>
+    <div class="et-hero-tabs-container">
+        <a class="et-hero-tab" href="#tab-react">Cam Kết Của Chúng Tôi</a>
+        <a class="et-hero-tab" href="#tab-es6">Phòng Của Chúng Tôi</a>
+        <a class="et-hero-tab" href="#tab-flexbox">Dịch Vụ Của Chúng Tôi</a>
+        <a class="et-hero-tab" href="#tab-angular">Tiện Nghi Của Resort Harmony</a>
+        <a class="et-hero-tab" href="#tab-other">Liên Hệ Với Chúng Tôi</a>
+        <span class="et-hero-tab-slider"></span>
+    </div>
+  </section>
+ <!-- Navigation bar -->
+
+<section class="welcome-section">
+    <div class="container">
+        <h2>CHÀO MỪNG ĐẾN VỚI RESORT HARMONY</h2>
+        <br> <br>
+        <h1>Resort Harmony Cam Kết Với Bạn</p>
+    </div>
+</section>
+
+
+<div class="containertc" id="tab-react">
+    <div class="card-lefttc">
+      <div class="card-imagetc">
+        <img src="https://i.pinimg.com/736x/63/23/49/63234957750a73b7512385acfe79e9ff.jpg" alt="" />
+      </div>
+      <div class="card-texttc">
+        <p>Resort Harmony cung cấp dịch vụ 24/7, luôn sẵn sàng đáp ứng mọi nhu cầu của khách hàng bất cứ lúc nào.</p>
+      </div>
+    </div>
+    <div class="card-toptc">
+        <div class="card-imagetc">
+          <img src="https://i.pinimg.com/736x/1b/4f/14/1b4f147b2482541e82d2a064c2ec2268.jpg" alt="" />
+        </div>
+        <div class="card-texttc">
+          <p>Resort Harmonycam kết thân thiện với môi trường, sử dụng năng lượng tái tạo, giảm thiểu rác thải và bảo tồn thiên nhiên.</p>
+        </div>
+      </div>
+      <div class="card-righttc">
+        <div class="card-imagetc">
+          <img src="https://assets.codepen.io/406785/benjamin-chambon-tmL6i-GK3zc-unsplash.jpg" alt="" />
+        </div>
+        <div class="card-texttc">
+          <p>Resort mang đến trải nghiệm ẩm thực đa dạng với các món ăn đặc sắc được chế biến bởi đầu bếp tài năng</p>
+        </div>
+      </div>
+      <div class="card-bottomtc">
+        <div class="card-imagetc">
+          <img src="https://b1857076.smushcdn.com/1857076/wp-content/uploads/2022/11/What-retail-security-guards-can-and-cant-do-UK-scaled.jpg?lossy=1&strip=1&webp=1" alt="" />
+        </div>
+        <div class="card-texttc">
+          <p>Resort Harmony luôn đảm bảo an ninh với hệ thống camera 24/7, đội ngũ bảo vệ chuyên nghiệp.</p>
+        </div>
+      </div>
+  </div>
+  
+<!-- Room Cards Section -->
+<section class="flip-cards-section">
+    <div class="container">
+        <h2 id="tab-es6">KHÁM PHÁ PHÒNG CỦA CHÚNG TÔI</h2>
+        <div class="wrapper">
+            <div class="card">
+                <input type="checkbox" id="card1" class="more" aria-hidden="true">
+                <div class="content">
+                    <div class="front" style="background-image: url('data:image/jpeg;base64,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')">
+                        <div class="inner">
+                            <h2>Phòng VIP</h2>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <label for="card1" class="button" aria-hidden="true">
+                                Chi tiết
+                            </label>
+                        </div>
+                    </div>
+                    <div class="back">
+                        <div class="inner">
+                            <div class="info">
+                                <span>4</span>
+                                <div class="icon">
+                                    <i class="fas fa-users"></i>
+                                    <span>người</span>
+                                </div>
+                            </div>
+                            <div class="info">
+                                <span>2</span>
+                                <div class="icon">
+                                    <i class="fas fa-bed"></i>
+                                    <span>giường</span>
+                                </div>
+                            </div>
+                            <div class="info">
+                                <span>1</span>
+                                <div class="icon">
+                                    <i class="fas fa-bath"></i>
+                                    <span>phòng tắm</span>
+                                </div>
+                            </div>
+                            <div class="info">
+                                <span>45</span>
+                                <div class="icon">
+                                    <i class="fas fa-vector-square"></i>
+                                    <span>m²</span>
+                                </div>
+                            </div>
+                            <div class="description">
+                                <p>Phòng VIP của chúng tôi mang đến trải nghiệm sang trọng với:</p>
+                                <ul>
+                                    <li>View panorama tuyệt đẹp</li>
+                                    <li>Nội thất cao cấp</li>
+                                    <li>Dịch vụ phòng 24/7</li>
+                                    <li>Minibar miễn phí</li>
+                                </ul>
+                            </div>
+                            <div class="location">Resort Harmony</div>
+                            <div class="price">2,000,000₫ / đêm</div>
+                            <label for="card1" class="button return" aria-hidden="true">
+                                <i class="fas fa-arrow-left"></i>
+                            </label>
+                            <a href="#" class="button book" aria-hidden="true">
+                                Đặt phòng
+                            </a> 
+                          
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <input type="checkbox" id="card2" class="more" aria-hidden="true">
+                <div class="content">
+                    <div class="front" style="background-image: url('https://www.xotels.com/wp-content/uploads/2022/07/Executive-Room-XOTELS.webp')">
+                        <div class="inner">
+                            <h2>Phòng Tiêu Chuẩn</h2>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <label for="card2" class="button" aria-hidden="true">
+                                Chi tiết
+                            </label>
+                        </div>
+                    </div>
+                    <div class="back">
+                        <div class="inner">
+                            <div class="info">
+                                <span>2</span>
+                                <div class="icon">
+                                    <i class="fas fa-users"></i>
+                                    <span>người</span>
+                                </div>
+                            </div>
+                            <div class="info">
+                                <span>1</span>
+                                <div class="icon">
+                                    <i class="fas fa-bed"></i>
+                                    <span>giường</span>
+                                </div>
+                            </div>
+                            <div class="info">
+                                <span>1</span>
+                                <div class="icon">
+                                    <i class="fas fa-bath"></i>
+                                    <span>phòng tắm</span>
+                                </div>
+                            </div>
+                            <div class="info">
+                                <span>30</span>
+                                <div class="icon">
+                                    <i class="fas fa-vector-square"></i>
+                                    <span>m²</span>
+                                </div>
+                            </div>
+                            <div class="description">
+                                <p>Phòng Tiêu Chuẩn tiện nghi với đầy đủ tiện ích:</p>
+                                <ul>
+                                    <li>Điều hòa hai chiều</li>
+                                    <li>TV thông minh</li>
+                                    <li>Wifi tốc độ cao</li>
+                                    <li>Bàn làm việc</li>
+                                </ul>
+                            </div>
+                            <div class="location">Resort Harmony</div>
+                            <div class="price">1,200,000₫ / đêm</div>
+                            <label for="card2" class="button return" aria-hidden="true">
+                                <i class="fas fa-arrow-left"></i>
+                            </label>
+                            <a href="#" class="button book" aria-hidden="true">
+                                Đặt phòng
+                            </a> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+   
+    <div class="container">
+        <h2 id="tab-flexbox">DỊCH VỤ CỦA CHÚNG TÔI</h2>
+        <div class="rooms-grid">
+            <div class="rooms-grid">
+                <a href="/DichVu/ViewMonAnKH" class="room-card">
+                    <div class="room-image">
+                        <img src="https://i.pinimg.com/564x/4a/1e/ab/4a1eab2d466012527d81bcd4a181e1c8.jpg" alt="ĐỒ DÙNG TIỆN LỢI">
+                    </div>
+                    <div class="room-info">
+                        <h3>ĐỒ DÙNG TIỆN LỢI</h3>
+                        <p>Luôn mang đến thực phẩm tươi ngon và lành mạnh nhất  </p>
+                    </div>
+                </a>
+                <a href="/DichVu/ViewXeKH" class="room-card">
+                    <div class="room-image">
+                        <img src="https://i.pinimg.com/564x/94/79/b7/9479b7667a3e4f2a494a9fe1e362455d.jpg" alt="DỊCH VỤ ĐƯA ĐÓN">
+                    </div>
+                    <div class="room-info">
+                        <h3>DỊCH VỤ ĐƯA ĐÓN</h3>
+                        <p>Dịch vụ đưa đón cao cấp của khách sạn Harmony cam kết chuyến đi an toàn và tiện nghi nhất!</p>
+                    </div>
+                </a>
+                <a href="/DichVu/ViewSpaKH" class="room-card">
+                    <div class="room-image">
+                        <img src="https://i.pinimg.com/564x/61/4b/69/614b690f286974704e463dbd8ac2d5d6.jpg" alt="DỊCH VỤ SPA">
+                    </div>
+                    <div class="room-info">
+                        <h3>DỊCH VỤ SPA</h3>
+                        <p>Dịch vụ spa của chúng tôi mang đến liệu pháp thư giãn và chăm sóc sắc đẹp toàn diện, giúp bạn tái tạo năng lượng và sự cân bằng.</p>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+<section class="amenities-section" id="tab-angular">
+    <div class="container">
+        <h2>TIỆN NGHI KHÁCH SẠN</h2>
+        <div class="amenities-grid">
+            <div class="amenity-item">
+                <i class="fas fa-charging-station"></i>
+                <p>Trạm sạc xe điện</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-wifi"></i>
+                <p>Internet tốc độ cao miễn phí (Wi-Fi)</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-swimming-pool"></i>
+                <p>Hồ bơi</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-dumbbell"></i>
+                <p>Trung tâm thể dục</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-parking"></i>
+                <p>Chỗ đỗ xe có tính phí tại chỗ</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-utensils"></i>
+                <p>Nhà hàng tại chỗ</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-glass-cheers"></i>
+                <p>Quầy bar / lounge</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-umbrella-beach"></i>
+                <p>Khu vực ăn uống ngoài trời</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-gift"></i>
+                <p>Cửa hàng quà tặng</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-paw"></i>
+                <p>Cho phép vật nuôi (thân thiện với chó)</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-briefcase"></i>
+                <p>Trung tâm dịch vụ doanh nhân với truy cập Internet</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-handshake"></i>
+                <p>Cơ sở hội nghị</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-suitcase"></i>
+                <p>Lưu trữ hành lý</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-concierge-bell"></i>
+                <p>Dịch vụ hướng dẫn khách (Concierge)</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-smoking-ban"></i>
+                <p>Khách sạn không hút thuốc</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-fire"></i>
+                <p>Lò sưởi ngoài trời</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-umbrella-beach"></i>
+                <p>Ghế dài / ghế bãi biển</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-money-bill-wave"></i>
+                <p>Máy ATM tại chỗ</p>
+            </div>
+            <div class="amenity-item">
+                <i class="fas fa-clock"></i>
+                <p>Lễ tân 24 giờ</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- New Tiện Nghi Phòng section -->
+<section class="room-amenities-section">
+    <div class="container">
+        <h2>TIỆN NGHI PHÒNG</h2>
+        <div class="room-amenities-grid">
+
+            <div class="room-amenity-item">
+                <i class="fas fa-broom"></i>
+                <p>Dịch vụ dọn phòng</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-tv"></i>
+                <p>TV thông minh</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-shower"></i>
+                <p>Phòng tắm có vòi sen đứng</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-tshirt"></i>
+                <p>Áo choàng tắm</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-door-open"></i>
+                <p>Phòng có cửa thông nhau</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-lock"></i>
+                <p>Két an toàn</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-couch"></i>
+                <p>Khu vực ngồi</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-door-closed"></i>
+                <p>Tủ quần áo</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-coffee"></i>
+                <p>Máy pha cà phê</p>
+            </div>
+            <div class="room-amenity-item">
+                <i class="fas fa-tools"></i>
+                <p>Bàn ủi và bàn ủi cỡ lớn</p>
+            </div>
+
+            <div class="room-amenity-item">
+                <i class="fas fa-snowflake"></i>
+                <p>Tủ lạnh</p>
+            </div>
+        </div>
+    </div>
+</section>
+<footer class="site-footer"id="tab-other">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-section about">
+                <h3>Về Resort Harmony</h3>
+                <p>Resort Harmony - Nơi đẳng cấp và sự thoải mái hội tụ. Chúng tôi cam kết mang đến cho bạn trải nghiệm lưu trú tuyệt vời nhất.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+             
+            <div class="footer-section links">
+                <h3>Liên kết nhanh</h3>
+                <ul>
+                    <li><a href="/Home/TrangChu">Trang chủ</a></li>
+                    <li><a href="/Home/DetailPhongThuong">Phòng thường</a></li>
+                    <li><a href="/Home/DetailPhongVip">Phòng vip</a></li>
+                    <li><a href="/DichVu/ViewMonAnKH">Dịch vụ ăn uống</a></li>
+                    <li><a href="/DichVu/ViewXeKH">Dịch vụ di chuyển </a></li>
+
+                </ul>
+            </div>
+
+            <div class="footer-section contact">
+                <h3>Liên hệ</h3>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Thành phố XYZ</p>
+                <p><i class="fas fa-phone"></i> +84 123 456 789</p>
+                <p><i class="fas fa-envelope"></i> info@harmonyhotel.com</p>
+            </div>
+
+            <div class="footer-section newsletter">
+                <h3>Đăng ký nhận tin</h3>
+                <p>Đăng ký để nhận thông tin về ưu đãi và sự kiện mới nhất.</p>
+                <form action="#" method="post">
+                    <input type="email" name="email" placeholder="Email của bạn">
+                    <button type="submit">Đăng ký</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>&copy; 2024 Resort Harmony. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

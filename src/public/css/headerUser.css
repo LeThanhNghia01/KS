@@ -1,0 +1,53 @@
+.headerUser {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1001; /* Cao hơn et-hero-tabs-container */
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-height: 56px; 
+}
+
+/* Thêm padding-top cho body để tránh content bị che bởi fixed header */
+body {
+    padding-top: 56px;
+    margin: 0;
+}
+/* Điều chỉnh vị trí của et-hero-tabs */
+.et-hero-tabs {
+    margin-top: 0;
+    padding-top: 56px; /* Bằng với chiều cao của navbar */
+}
+
+.navbar-brand {
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.nav-link {
+    transition: color 0.3s ease;
+    cursor: pointer;
+}
+
+.nav-link:hover {
+    color: #ffc107 !important;
+}
+
+/* Removed default hiding of user menu */
+.user-menu.show {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+}
+
+.nav-item.dropdown:hover .dropdown-menu {
+    display: block;
+}
