@@ -88,6 +88,19 @@ app.post('/api/user/logout', (req, res) => {
         res.json({ success: true, message: 'Đăng xuất thành công' });
     });
 });
+// Thêm endpoint đăng xuất cho người dùng admin
+app.post('/api/admin/logout', (req, res) => {
+    // Hủy session của người dùng
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Lỗi khi đăng xuất:', err);
+            return res.status(500).json({ success: false, message: 'Đăng xuất không thành công' });
+        }
+        // Xóa cookie session nếu có
+        res.clearCookie('connect.sid'); // 'connect.sid' là tên mặc định của cookie session
+        res.json({ success: true, message: 'Đăng xuất thành công' });
+    });
+});
 
 // Khai báo publicRoutes ở mức global
 const publicRoutes = [
