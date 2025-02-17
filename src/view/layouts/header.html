@@ -1,35 +1,27 @@
 <!--src/view/layouts/header.html-->
 <header class="header">
     <link rel="stylesheet" href="../../public/css/header.css">
-    
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="../Trangchu/TrangChuAdmin.html">RESORT</a>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+     <!-- Horizontal Navbar -->
+     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <!-- Toggle Sidebar Button -->
+            <button class="btn btn-dark d-inline-block" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <a class="navbar-brand ms-3" href="../Trangchu/TrangChuAdmin.html">RESORT</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <!-- Menu chính -->
-                <ul class="navbar-nav me-auto main-menu">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/PhongAdmin/ViewPhongAdmin.html">Phòng</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/DichVu/ViewDichVu.html">Dịch vụ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/DatPhong/DatPhong.html">Đặt phòng</a>
-                    </li>
-                </ul>
-
                 <!-- Menu khách (chỉ hiện khi chưa đăng nhập) -->
                 <ul class="navbar-nav ms-auto guest-menu" style="display: none;">
                     <li class="nav-item">
                         <a class="nav-link" href="../LoginAdmin/LoginAdmin.html">Đăng nhập</a>
                     </li>
                 </ul>
-
                 <!-- Menu user (chỉ hiện khi đã đăng nhập) -->
                 <ul class="navbar-nav ms-auto user-menu" style="display: none;">
                     <li class="nav-item dropdown">
@@ -54,6 +46,42 @@
             </div>
         </div>
     </nav>
+
+    <!-- Vertical Sidebar -->
+    <div class="sidebar bg-dark" id="sidebar">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link text-white" href="../Trangchu/TrangChuAdmin.html">
+                    <i class="fas fa-home"></i> <span class="menu-text">Trang chủ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="../QuanLyPhong/DanhSachPhong.html">
+                    <i class="fas fa-bed"></i> <span class="menu-text">Quản lý phòng</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="../QuanLyDatPhong/DanhSachDatPhong.html">
+                    <i class="fas fa-calendar-check"></i> <span class="menu-text">Đặt phòng</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="../QuanLyKhachHang/DanhSachKhachHang.html">
+                    <i class="fas fa-users"></i> <span class="menu-text">Khách hàng</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="../LoaiPhong/QuanLyLoaiPhong.html">
+                    <i class="fas fa-door-open"></i> <span class="menu-text">Quản Lý Loại Phòng</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="../LoaiPhong/QuanLyLoaiPhong.html">
+                    <i class="fas fa-door-open"></i> <span class="menu-text"></span>
+                </a>
+            </li>
+        </ul>
+    </div>
 </header>
 
 <!-- Bootstrap JS -->

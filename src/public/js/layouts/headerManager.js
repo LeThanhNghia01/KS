@@ -1,9 +1,9 @@
-// src/public/js/layouts/headerManager.js
 class HeaderManager {
     static async init() {
         await this.loadHeader();
         await this.setupLogoutHandler();
         await this.updateHeaderUI();
+        await this.initializeSidebar(); // Thêm khởi tạo sidebar
     }
 
     static async loadHeader() {
@@ -14,8 +14,7 @@ class HeaderManager {
             const response = await fetch('/layouts/header.html');
             const html = await response.text();
             headerPlaceholder.innerHTML = html;
-
-           //Quan trọng: Thiết lập trình xử lý sự kiện sau khi DOM được cập nhật
+            //Quan trọng: Thiết lập trình xử lý sự kiện sau khi DOM được cập nhật
             await this.setupLogoutHandler();
             await this.updateHeaderUI();
         } catch (error) {
@@ -51,7 +50,7 @@ class HeaderManager {
                     sessionStorage.clear();
                     localStorage.clear();
                     
-                  // Chuyển hướng đến trang đăng nhập
+                    // Chuyển hướng đến trang đăng nhập
                     window.location.href = '/LoginAdmin/LoginAdmin.html';
                 } else {
                     const data = await response.json();
@@ -89,6 +88,37 @@ class HeaderManager {
         } catch (error) {
             console.error('Error updating header:', error);
         }
+    }
+
+    // Thêm phương thức mới để khởi tạo sidebar
+    static async initializeSidebar() {
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.querySelector('.main-content');
+
+        if (!sidebarToggle || !sidebar) {
+            console.error('Sidebar elements not found');
+            return;
+        }
+
+        // Load sidebar state from localStorage
+        const sidebarState = localStorage.getItem('sidebarState');
+        if (sidebarState === 'active') {
+            sidebar.classList.add('active');
+            mainContent?.classList.add('sidebar-active');
+        }
+
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            mainContent?.classList.toggle('sidebar-active');
+            
+            // Save sidebar state to localStorage
+            if (sidebar.classList.contains('active')) {
+                localStorage.setItem('sidebarState', 'active');
+            } else {
+                localStorage.setItem('sidebarState', 'inactive');
+            }
+        });
     }
 }
 
