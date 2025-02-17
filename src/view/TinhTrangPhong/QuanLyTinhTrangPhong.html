@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý tình trạng phòng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+       <!-- Auth Check Script -->
+       <script type="module" src="../../middleware/authMiddleware.js"></script><!--này là check xem m đăng nhập chưa-->
+       <script type="module" src="../../public/js/layouts/loadHeader.js"></script><!--này là chek xem m có quyền không-->
+</head>
+<body>
+    <!-- Header placeholder -->
+    <div id="header-placeholder"></div>
+
+    <div class="container mt-5">
+        <h2>Quản lý tình trạng phòng</h2>
+        
+        <!-- Form thêm loại phòng -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="tinhTrangPhongForm">
+                    <div class="mb-3">
+                        <label for="tenTinhTrang" class="form-label">Tên Tình Trạng Phòng</label>
+                        <input type="text" class="form-control" id="tenTinhTrang" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Thêm tình trạng phòng</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bảng danh sách loại phòng -->
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên tình trạng phòng</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tinhTrangPhongList">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import các file JS cần thiết -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../public/js/TinhTrangPhong/tinhTrangPhongManager.js"></script><!--này là load tải loại phòng-->
+        <!-- Load header -->
+        <script src="../../public/js/layouts/headerManager.js"></script><!--này là load tên người dùng hiện tại đang đăng nhập á-->
+    
+</body>
+</html>

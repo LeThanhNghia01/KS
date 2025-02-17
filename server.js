@@ -32,6 +32,7 @@ const profileRoutes = require('./src/controllers/ProfileController/profileRoutes
 const accountsAdminRoutes = require('./src/controllers/AccountsAdminController/accountsAdminRoutes');
 const loginUserRoutes = require('./src/controllers/LoginUserController/loginUserRoutes');
 const loaiPhongRoutes = require('./src/controllers/LoaiPhongController/loaiPhongRoutes');
+const tinhTrangPhongRoutes=require('./src/controllers/TinhTrangPhongController/tinhTrangPhongRoutes')//1
 
 // ===== Các route công khai =====
 // Route xác thực
@@ -175,6 +176,11 @@ app.use('/api/loai-phong', checkAdminAuth, loaiPhongRoutes);
 // Thêm route cho trang Quản lý loại phòng
 app.get('/LoaiPhong/QuanLyLoaiPhong.html', checkAdminAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'src/view/LoaiPhong/QuanLyLoaiPhong.html'));
+});
+
+app.use('/api/tinh-trang-phong',checkAdminAuth,tinhTrangPhongRoutes);//2
+app.get('/TinhTrangPhong/QuanLyTinhTrangPhong.html',checkAdminAuth,(req,res)=>{
+    res.sendFile(path.join(__dirname,'src/view/TinhTrangPhong/QuanLyTinhTrangPhong.html'));
 });
 
 // ===== Khởi chạy Server =====
