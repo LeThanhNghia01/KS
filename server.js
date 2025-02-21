@@ -33,7 +33,7 @@ const accountsAdminRoutes = require('./src/controllers/AccountsAdminController/a
 const loginUserRoutes = require('./src/controllers/LoginUserController/loginUserRoutes');
 const loaiPhongRoutes = require('./src/controllers/LoaiPhongController/loaiPhongRoutes');
 const tinhTrangPhongRoutes=require('./src/controllers/TinhTrangPhongController/tinhTrangPhongRoutes')//1
-
+const phongAdminRoutes = require('./src/controllers/PhongAdminController/PhongAdminRoutes');
 // ===== Các route công khai =====
 // Route xác thực
 app.post('/api/user/register', loginUserController.register); // Đăng ký người dùng
@@ -170,6 +170,11 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use('/api/phong-admin', phongAdminRoutes);
+// Thêm route cho trang Quản lý phòng
+app.get('/Phong/roomManager.html', checkAdminAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/view/Phong/roomManager.html'));
+});
 // Thêm route API
 app.use('/api/loai-phong', checkAdminAuth, loaiPhongRoutes);
 
