@@ -4,11 +4,57 @@ class PhongManager {
         this.setupEventHandlers();
         this.setupEditRoomHandler();
         this.setupDeleteRoomHandler();
+        this.setupFilterHandlers();
         await this.loadRoomTypes();
         await this.loadRoomStatuses();
         await this.loadRooms(); 
     }
+    // Thêm phương thức mới để xử lý bộ lọc
+    static setupFilterHandlers() {
+        const applyFilterBtn = document.getElementById('applyFilter');
+        const resetFilterBtn = document.getElementById('resetFilter');
 
+        applyFilterBtn.addEventListener('click', () => this.applyFilters());
+        resetFilterBtn.addEventListener('click', () => this.resetFilters());
+    }
+
+    static async applyFilters() {
+        const filters = {
+            roomType: document.getElementById('filterRoomType').value,
+            status: document.getElementById('filterStatus').value,
+            minPrice: document.getElementById('minPrice').value,
+            maxPrice: document.getElementById('maxPrice').value
+        };
+
+        try {
+            const response = await fetch('/api/phong-admin/list?' + new URLSearchParams({
+                roomType: filters.roomType,
+                status: filters.status,
+                minPrice: filters.minPrice,
+                maxPrice: filters.maxPrice
+            }));
+
+            const data = await response.json();
+            if (data.success) {
+                this.renderRooms(data.data);
+            } else {
+                console.error('Lỗi khi lọc danh sách phòng:', data.message);
+            }
+        } catch (error) {
+            console.error('Lỗi khi áp dụng bộ lọc:', error);
+        }
+    }
+
+    static resetFilters() {
+        // Reset các giá trị filter về mặc định
+        document.getElementById('filterRoomType').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('minPrice').value = '';
+        document.getElementById('maxPrice').value = '';
+        
+        // Load lại danh sách phòng
+        this.loadRooms();
+    }
     // Thêm phương thức loadRooms
     static async loadRooms() {
         try {

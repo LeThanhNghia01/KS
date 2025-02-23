@@ -100,24 +100,51 @@ class PhongAdminController {
     }
     static async getListRooms(req, res) {
         try {
-            const query = `
+            const { roomType, status, minPrice, maxPrice } = req.query;
+            
+            let query = `
                 SELECT p.*, lp.TenLoai, ttp.TenTinhTrang, nv.Ten as TenNhanVien
                 FROM Phong p
                 LEFT JOIN LoaiPhong lp ON p.IDLoai = lp.IDLoai
                 LEFT JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
                 LEFT JOIN NhanVien nv ON p.created_by = nv.NhanVienID
                 WHERE p.is_deleted = FALSE
-                ORDER BY p.PhongID DESC
             `;
-
-            const [rooms] = await db.execute(query);
-
+    
+            const params = [];
+    
+            // Thêm điều kiện lọc theo loại phòng
+            if (roomType) {
+                query += ` AND p.IDLoai = ?`;
+                params.push(roomType);
+            }
+    
+            // Thêm điều kiện lọc theo tình trạng
+            if (status) {
+                query += ` AND p.IDTinhTrang = ?`;
+                params.push(status);
+            }
+    
+            // Thêm điều kiện lọc theo giá
+            if (minPrice) {
+                query += ` AND p.Gia >= ?`;
+                params.push(minPrice);
+            }
+            if (maxPrice) {
+                query += ` AND p.Gia <= ?`;
+                params.push(maxPrice);
+            }
+    
+            query += ` ORDER BY p.PhongID DESC`;
+    
+            const [rooms] = await db.execute(query, params);
+    
             return res.json({
                 success: true,
                 message: 'Lấy danh sách phòng thành công',
                 data: rooms
             });
-
+    
         } catch (error) {
             console.error('Lỗi khi lấy danh sách phòng:', error);
             return res.status(500).json({
