@@ -1,21 +1,29 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const { checkAuth, checkUserAuth, checkAdminAuth } = require('./src/middleware/authMiddleware');
+const { checkUserAuth, checkAdminAuth } = require('./src/middleware/authMiddleware');
 const app = express();
 
 // ===== Cấu hình Middleware =====
 app.use(express.json());
 app.use(session({
-    secret: 'your-secret-key', // Khóa bí mật cho phiên làm việc
+    secret: 'hhhhjjjaaaa1hja1', // Khóa bí mật cho phiên làm việc
     resave: true, // Lưu phiên làm việc ngay cả khi không thay đổi
     saveUninitialized: true, // Lưu phiên ngay cả khi chưa được khởi tạo
     cookie: { 
-        secure: false, // Không sử dụng bảo mật HTTPS
-        maxAge: 24 * 60 * 60 * 1000 // Thời hạn cookie 1 ngày
+        secure: process.env.NODE_ENV === 'production',// Không sử dụng bảo mật HTTPS
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000, // Thời hạn cookie 1 ngày
+        sameSite: 'lax'
     }
 }));
-
+const cors = require('cors');
+app.use(cors({
+    origin: 'http://localhost:3000', 
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 // ===== Cấu hình tập tin tĩnh =====
 app.use(express.static(path.join(__dirname, 'src'))); // Chỉ định thư mục tĩnh
 app.use('/public', express.static(path.join(__dirname, 'src/public')));
@@ -38,7 +46,11 @@ const phongAdminRoutes = require('./src/controllers/PhongAdminController/PhongAd
 // Route xác thực
 app.post('/api/user/register', loginUserController.register); // Đăng ký người dùng
 app.post('/api/user/login', loginUserController.login); // Đăng nhập người dùng
-
+app.post('/api/user/google-login', loginUserController.googleLogin); // Đăng nhập bằng Google
+app.get('/api/user/check-auth', loginUserController.checkAuth); // Kiểm tra xác thực
+// Routes cho User - những route user cần xác thực
+app.use('/api/user/profile', checkUserAuth);
+app.use('/api/user/bookings', checkUserAuth);
 // Route đăng nhập admin không cần middleware auth
 app.post('/api/admin/login', loginAdminController.loginAdmin);
 app.get('/api/admin/check-auth', loginAdminController.checkAuth);
@@ -65,7 +77,7 @@ app.get('/layouts/headerUser.html', (req, res) => {
 // ===== Các route bảo vệ =====
 // Các route admin khác mới cần middleware
 app.use('/api/admin', checkAdminAuth);
-
+app.use('/api/user', loginUserRoutes);
 // Route accounts admin
 app.use('/api/accounts-admin', accountsAdminRoutes);
 
