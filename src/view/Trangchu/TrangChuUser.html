@@ -19,25 +19,119 @@
 <body>
     <div id="headerUser-placeholder"></div>
        <!-- Hero -->
-  <section class="et-hero-tabs">
-    <h1>thêm slider vào sau</h1>
-    <h3>Sliding content with sticky tab nav</h3>
-    <div class="et-hero-tabs-container">
-        <a class="et-hero-tab" href="#tab-react">Cam Kết Của Chúng Tôi</a>
-        <a class="et-hero-tab" href="#tab-es6">Phòng Của Chúng Tôi</a>
-        <a class="et-hero-tab" href="#tab-flexbox">Dịch Vụ Của Chúng Tôi</a>
-        <a class="et-hero-tab" href="#tab-angular">Tiện Nghi Của Resort Harmony</a>
-        <a class="et-hero-tab" href="#tab-other">Liên Hệ Với Chúng Tôi</a>
-        <span class="et-hero-tab-slider"></span>
-    </div>
+       <section class="et-hero-tabs">
+        <div class="et-hero-tabs-container">
+            <a class="et-hero-tab" href="#tab-react">Cam Kết Của Chúng Tôi</a>
+            <a class="et-hero-tab" href="#tab-es6">Phòng Của Chúng Tôi</a>
+            <a class="et-hero-tab" href="#tab-flexbox">Dịch Vụ Của Chúng Tôi</a>
+            <a class="et-hero-tab" href="#tab-angular">Tiện Nghi Của Resort Harmony</a>
+            <a class="et-hero-tab" href="#tab-other">Liên Hệ Với Chúng Tôi</a>
+        </div>
   </section>
- <!-- Navigation bar -->
+ <!-- slider -->
+ <div class="slider">
+    <button class="slider--btn slider--btn__prev">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6" />
+        </svg>
+    </button>
 
+    <div class="slides__wrapper">
+        <div class="slides">
+            <!-- slide 1 -->
+            <div class="slide" data-current>
+                <div class="slide__inner">
+                    <div class="slide--image__wrapper">
+                        <img class="slide--image" src="https://i.pinimg.com/736x/7a/a1/94/7aa19415266b8ad0ad570b7d2ecc3e8e.jpg" alt="Image 1" />
+                    </div>
+                </div>
+            </div>
+            <div class="slide__bg" style="--bg: url(https://i.pinimg.com/736x/7a/a1/94/7aa19415266b8ad0ad570b7d2ecc3e8e.jpg); --dir: 0" data-current></div>
+
+            <!-- slide 2 -->
+            <div class="slide" data-next>
+                <div class="slide__inner">
+                    <div class="slide--image__wrapper">
+                        <img class="slide--image" src="https://i.pinimg.com/736x/0a/12/19/0a1219682d4adf8daaa99492e2a4cddd.jpg" alt="Image 2" />
+                    </div>
+                </div>
+            </div>
+            <div class="slide__bg" style="--bg: url(https://i.pinimg.com/736x/0a/12/19/0a1219682d4adf8daaa99492e2a4cddd.jpg); --dir: 1" data-next></div>
+
+            <!-- slide 3 -->
+            <div class="slide" data-previous>
+                <div class="slide__inner">
+                    <div class="slide--image__wrapper">
+                        <img class="slide--image" src="https://i.pinimg.com/736x/1d/be/47/1dbe471667b62f6a0701f2a6d05dfbe3.jpg" alt="Image 3" />
+                    </div>
+                </div>
+            </div>
+            <div class="slide__bg" style="--bg: url(https://i.pinimg.com/736x/1d/be/47/1dbe471667b62f6a0701f2a6d05dfbe3.jpg); --dir: -1" data-previous></div>
+        </div>
+        <div class="slides--infos">
+            <!-- Slide Info 1 -->
+            <div class="slide-info" data-current>
+                <div class="slide-info__inner">
+                    <div class="slide-info--text__wrapper">
+                        <div data-title class="slide-info--text">
+                            <span>HARMONY</span>
+                        </div>
+                        <div data-subtitle class="slide-info--text">
+                            <span>Ưu Đãi Giới Hạn</span>
+                        </div>
+                        <div data-description class="slide-info--text">
+                            <span>Nơi Có Các Tiện Nghi Bậc Nhất</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide Info 2 -->
+            <div class="slide-info" data-next>
+                <div class="slide-info__inner">
+                    <div class="slide-info--text__wrapper">
+                        <div data-title class="slide-info--text">
+                            <span>Trải Nghiệm</span>
+                        </div>
+                        <div data-subtitle class="slide-info--text">
+                            <span>Không Bao Giờ Có</span>
+                        </div>
+                        <div data-description class="slide-info--text">
+                            <span>Luôn Mang Đến Ưu Đãi Bậc Nhất</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide Info 3 -->
+            <div class="slide-info" data-previous>
+                <div class="slide-info__inner">
+                    <div class="slide-info--text__wrapper">
+                        <div data-title class="slide-info--text">
+                            <span>View Phòng</span>
+                        </div>
+                        <div data-subtitle class="slide-info--text">
+                            <span>Đỉnh Nóc Kịch Trần</span>
+                        </div>
+                        <div data-description class="slide-info--text">
+                            <span>Hãy Đặt Phòng Để Tận Hưởng</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="slider--btn slider--btn__next">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6" />
+        </svg>
+    </button>
+</div>
 <section class="welcome-section">
     <div class="container">
-        <h2>CHÀO MỪNG ĐẾN VỚI RESORT HARMONY</h2>
-        <br> <br>
-        <h1>Resort Harmony Cam Kết Với Bạn</p>
+        <h2>CHÀO MỪNG ĐẾN VỚI RESORT HARMONY<br><br><br><br>
+            Resort Harmony Cam Kết Với Bạn</h2>
+       
     </div>
 </section>
 
@@ -76,7 +170,7 @@
         </div>
       </div>
   </div>
-  
+
 <!-- Room Cards Section -->
 <section class="flip-cards-section">
     <div class="container">
@@ -137,6 +231,7 @@
                                     <li>Nội thất cao cấp</li>
                                     <li>Dịch vụ phòng 24/7</li>
                                     <li>Minibar miễn phí</li>
+                                    <li>Một số dịch vụ khác</li>
                                 </ul>
                             </div>
                             <div class="location">Resort Harmony</div>
@@ -144,8 +239,8 @@
                             <label for="card1" class="button return" aria-hidden="true">
                                 <i class="fas fa-arrow-left"></i>
                             </label>
-                            <a href="#" class="button book" aria-hidden="true">
-                                Đặt phòng
+                            <a href="#DP" class="button book" aria-hidden="true">
+                                Xem & Đặt phòng
                             </a> 
                           
                         </div>
@@ -208,6 +303,7 @@
                                     <li>TV thông minh</li>
                                     <li>Wifi tốc độ cao</li>
                                     <li>Bàn làm việc</li>
+                                    <li>Một số dịch vụ khác</li>
                                 </ul>
                             </div>
                             <div class="location">Resort Harmony</div>
@@ -215,8 +311,8 @@
                             <label for="card2" class="button return" aria-hidden="true">
                                 <i class="fas fa-arrow-left"></i>
                             </label>
-                            <a href="#" class="button book" aria-hidden="true">
-                                Đặt phòng
+                            <a href="#DP" class="button book" aria-hidden="true">
+                                Xem & Đặt phòng
                             </a> 
                         </div>
                     </div>
@@ -224,13 +320,13 @@
             </div>
         </div>
     </div>
+
 </section>
-   
     <div class="container">
-        <h2 id="tab-flexbox">DỊCH VỤ CỦA CHÚNG TÔI</h2>
+        <h1 id="tab-flexbox">DỊCH VỤ CỦA CHÚNG TÔI</h1>
         <div class="rooms-grid">
             <div class="rooms-grid">
-                <a href="/DichVu/ViewMonAnKH" class="room-card">
+                <a href="#" class="room-card">
                     <div class="room-image">
                         <img src="https://i.pinimg.com/564x/4a/1e/ab/4a1eab2d466012527d81bcd4a181e1c8.jpg" alt="ĐỒ DÙNG TIỆN LỢI">
                     </div>
@@ -239,7 +335,7 @@
                         <p>Luôn mang đến thực phẩm tươi ngon và lành mạnh nhất  </p>
                     </div>
                 </a>
-                <a href="/DichVu/ViewXeKH" class="room-card">
+                <a href="#" class="room-card">
                     <div class="room-image">
                         <img src="https://i.pinimg.com/564x/94/79/b7/9479b7667a3e4f2a494a9fe1e362455d.jpg" alt="DỊCH VỤ ĐƯA ĐÓN">
                     </div>
@@ -248,7 +344,7 @@
                         <p>Dịch vụ đưa đón cao cấp của khách sạn Harmony cam kết chuyến đi an toàn và tiện nghi nhất!</p>
                     </div>
                 </a>
-                <a href="/DichVu/ViewSpaKH" class="room-card">
+                <a href="#" class="room-card">
                     <div class="room-image">
                         <img src="https://i.pinimg.com/564x/61/4b/69/614b690f286974704e463dbd8ac2d5d6.jpg" alt="DỊCH VỤ SPA">
                     </div>
@@ -263,7 +359,7 @@
     </div>
 </section>
 <section class="amenities-section" id="tab-angular">
-    <div class="container">
+    <div class="container1">
         <h2>TIỆN NGHI KHÁCH SẠN</h2>
         <div class="amenities-grid">
             <div class="amenity-item">
@@ -348,7 +444,7 @@
 
 <!-- New Tiện Nghi Phòng section -->
 <section class="room-amenities-section">
-    <div class="container">
+    <div class="container1">
         <h2>TIỆN NGHI PHÒNG</h2>
         <div class="room-amenities-grid">
 
@@ -401,18 +497,7 @@
     </div>
 </section>
 <footer class="site-footer"id="tab-other">
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-section about">
-                <h3>Về Resort Harmony</h3>
-                <p>Resort Harmony - Nơi đẳng cấp và sự thoải mái hội tụ. Chúng tôi cam kết mang đến cho bạn trải nghiệm lưu trú tuyệt vời nhất.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                </div>
-            </div>
-             
+        <div class="footer-content">    
             <div class="footer-section links">
                 <h3>Liên kết nhanh</h3>
                 <ul>
@@ -421,10 +506,17 @@
                     <li><a href="/Home/DetailPhongVip">Phòng vip</a></li>
                     <li><a href="/DichVu/ViewMonAnKH">Dịch vụ ăn uống</a></li>
                     <li><a href="/DichVu/ViewXeKH">Dịch vụ di chuyển </a></li>
-
                 </ul>
             </div>
-
+            <div class="footer-section about">
+                <h3>Về Resort Harmony</h3>
+                <p>Resort Harmony - Nơi đẳng cấp và sự thoải mái hội tụ. Chúng tôi cam kết mang đến cho bạn trải nghiệm lưu trú tuyệt vời nhất.</p>
+                <div class="social-icons">
+                    <a href="#FB"><i class="fab fa-facebook"></i></a>
+                    <a href="#TT"><i class="fab fa-twitter"></i></a>
+                    <a href="#IT"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
             <div class="footer-section contact">
                 <h3>Liên hệ</h3>
                 <p><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Thành phố XYZ</p>
@@ -441,7 +533,7 @@
                 </form>
             </div>
         </div>
-    </div>
+   
     <div class="footer-bottom">
         <div class="container">
             <p>&copy; 2024 Resort Harmony. Tất cả quyền được bảo lưu.</p>

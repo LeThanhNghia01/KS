@@ -117,3 +117,90 @@ document.addEventListener('DOMContentLoaded', function() {
 
     new StickyNavigation();
 });
+//slide
+  //Khởi tạo các biến cần thiết.
+  document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.querySelectorAll('.slide');//Lấy tất cả các phần tử có class .slide (các slide chính).
+    const slideInfos = document.querySelectorAll('.slide-info');//Lấy tất cả các phần tử có class .slide-info (các thông tin của slide).
+    const slideBgs = document.querySelectorAll('.slide__bg');
+    const prevButton = document.querySelector('.slider--btn__prev');
+    const nextButton = document.querySelector('.slider--btn__next');
+    let currentIndex = 0;//Biến lưu vị trí hiện tại của slide đang hiển thị.
+    //hiển thị slide hiện tại và thiết lập trạng thái cho các slide
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            if (i === index) {//Nếu vị trí hiện tại của slide đang hiển thị bằng với vị trí của slide cần hiển thị thì hiển thị slide đó.
+                slide.setAttribute('data-current', '');
+                slide.removeAttribute('data-next');
+                slide.removeAttribute('data-previous');
+                
+            } else if (i === (index + 1) % slides.length) {
+                slide.setAttribute('data-next', '');
+                slide.removeAttribute('data-current');
+                slide.removeAttribute('data-previous');
+            } else if (i === (index - 1 + slides.length) % slides.length) {
+                slide.setAttribute('data-previous', '');
+                slide.removeAttribute('data-current');
+                slide.removeAttribute('data-next');
+            } else {
+                slide.removeAttribute('data-current');
+                slide.removeAttribute('data-next');
+                slide.removeAttribute('data-previous');
+            }
+        });
+        //Ví Dụ
+        // index = 0: slide 0 → data-current, slide 1 → data-next, slide 2 → data-previous.
+        // index = 1: slide 1 → data-current, slide 2 → data-next, slide 0 → data-previous.
+        // index = 2: slide 2 → data-current, slide 0 → data-next, slide 1 → data-previous.
+        slideBgs.forEach((bg, i) => {
+            if (i === index) {
+                bg.setAttribute('data-current', '');
+                bg.removeAttribute('data-next');
+                bg.removeAttribute('data-previous');
+            } else if (i === (index + 1) % slideBgs.length) {
+                bg.setAttribute('data-next', '');
+                bg.removeAttribute('data-current');
+                bg.removeAttribute('data-previous');
+            } else if (i === (index - 1 + slideBgs.length) % slideBgs.length) {
+                bg.setAttribute('data-previous', '');
+                bg.removeAttribute('data-current');
+                bg.removeAttribute('data-next');
+            } else {
+                bg.removeAttribute('data-current');
+                bg.removeAttribute('data-next');
+                bg.removeAttribute('data-previous');
+            }
+        });
+        slideInfos.forEach((slideInfo, i) => {
+            if (i === index) {
+                slideInfo.setAttribute('data-current', '');
+                slideInfo.removeAttribute('data-next');
+                slideInfo.removeAttribute('data-previous');
+            } else if (i === (index + 1) % slideInfos.length) {
+                slideInfo.setAttribute('data-next', '');
+                slideInfo.removeAttribute('data-current');
+                slideInfo.removeAttribute('data-previous');
+            } else if (i === (index - 1 + slideInfos.length) % slideInfos.length) {
+                slideInfo.setAttribute('data-previous', '');
+                slideInfo.removeAttribute('data-current');
+                slideInfo.removeAttribute('data-next');
+            } else {
+                slideInfo.removeAttribute('data-current');
+                slideInfo.removeAttribute('data-next');
+                slideInfo.removeAttribute('data-previous');
+            }
+        });
+    }
+    //xử lý nút previous
+    prevButton.addEventListener('click', () => {
+        currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+        showSlide(currentIndex);
+    });
+    //xử lý nút next
+    nextButton.addEventListener('click', () => {
+        currentIndex = (currentIndex + 1) % slides.length;
+        showSlide(currentIndex);
+    });
+   //Khởi tạo slide đầu tiên
+    showSlide(currentIndex);
+});
