@@ -31,7 +31,7 @@ app.use('/public', express.static(path.join(__dirname, 'src/public')));
 // ===== Nhập các controller =====
 const loginUserController = require('./src/controllers/LoginUserController/LoginUserController');
 const loginAdminController = require('./src/controllers/LoginAdminController/loginadminController');
-const profileUserController = require('./src/controllers/ProfileController/profileUserConsole');
+const profileUserController = require('./src/controllers/ProfileController/profileUserController');
 const profileController = require('./src/controllers/ProfileController/profileController');
 
 // ===== Nhập các route =====
@@ -48,6 +48,7 @@ app.post('/api/user/register', loginUserController.register); // Đăng ký ngư
 app.post('/api/user/login', loginUserController.login); // Đăng nhập người dùng
 app.post('/api/user/google-login', loginUserController.googleLogin); // Đăng nhập bằng Google
 app.get('/api/user/check-auth', loginUserController.checkAuth); // Kiểm tra xác thực
+
 // Routes cho User - những route user cần xác thực
 app.use('/api/user/profile', checkUserAuth);
 app.use('/api/user/bookings', checkUserAuth);
