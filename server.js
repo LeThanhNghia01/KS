@@ -17,6 +17,13 @@ app.use(session({
         sameSite: 'lax'
     }
 }));
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+    }
+}));
 const cors = require('cors');
 app.use(cors({
     origin: 'http://localhost:3000', 

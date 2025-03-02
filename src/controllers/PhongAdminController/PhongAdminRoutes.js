@@ -5,10 +5,10 @@ const PhongAdminController = require('./phongAdminController');
 
 let fileUpload;
 try {
-    fileUpload = require('express-fileupload');
+    fileUpload = require('express-fileupload');// Import thư viện express-fileupload
 } catch (error) {
-    console.error('express-fileupload module not found. Please run: npm install express-fileupload');
-    // Provide a simple middleware as fallback
+    console.error('Không thể import thư viện express-fileupload:Please run: npm install express-fileupload', error);
+    // Nếu không import được thư viện express-fileupload thì sử dụng middleware giả để không bị lỗi
     fileUpload = () => (req, res, next) => next();
 }
 
@@ -21,7 +21,7 @@ router.use(fileUpload({
         fileSize: 5 * 1024 * 1024 // 5MB limit
     },
     abortOnLimit: true,
-    responseOnLimit: 'File size is too large (max 5MB)',
+    responseOnLimit: 'File size quá lớn (max 5MB)',
     useTempFiles: true,
     tempFileDir: '/tmp/',
     debug: process.env.NODE_ENV === 'development'
@@ -37,11 +37,20 @@ router.use((err, req, res, next) => {
     }
     next(err);
 });
+// Trong PhongAdminRoutes.js
+router.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+        success: false,
+        message: 'Đã xảy ra lỗi server',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+});
 
 // Route thêm phòng mới với xử lý lỗi
 router.post('/create', checkAdminAuth, async (req, res) => {
     try {
-        await PhongAdminController.createRoom(req, res);
+        await PhongAdminController.createRoom(req, res);// Gọi hàm tạo phòng từ controller
     } catch (error) {
         console.error('Lỗi khi tạo phòng:', error);
         res.status(500).json({
@@ -51,13 +60,14 @@ router.post('/create', checkAdminAuth, async (req, res) => {
         });
     }
 });
-router.get('/list', checkAdminAuth, PhongAdminController.getListRooms);
-
-
+// Route lấy danh sách phòng
+router.get('/list', checkAdminAuth, PhongAdminController.getListRooms); 
+// Route lấy chi tiết phòng
 router.get('/detail/:id', checkAdminAuth, PhongAdminController.getRoomDetail);
+// Route cập nhật phòng
 router.put('/update/:id', checkAdminAuth, async (req, res) => {
     try {
-        await PhongAdminController.updateRoom(req, res);
+        await PhongAdminController.updateRooms(req, res);
     } catch (error) {
         console.error('Lỗi khi cập nhật phòng:', error);
         res.status(500).json({
@@ -67,5 +77,10 @@ router.put('/update/:id', checkAdminAuth, async (req, res) => {
         });
     }
 });
+// Route xóa phòng
 router.delete('/delete/:id', checkAdminAuth, PhongAdminController.deleteRoom);
+
+// Thêm route mới để xóa một ảnh cụ thể
+router.delete('/delete-image/:imageId', checkAdminAuth, PhongAdminController.deleteRoomImage);
+
 module.exports = router;

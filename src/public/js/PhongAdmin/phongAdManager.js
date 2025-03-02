@@ -9,7 +9,7 @@ class PhongManager {
         await this.loadRoomStatuses();
         await this.loadRooms(); 
     }
-    // Thêm phương thức mới để xử lý bộ lọc
+    // Thiết lập cho bộ lọc
     static setupFilterHandlers() {
         const applyFilterBtn = document.getElementById('applyFilter');
         const resetFilterBtn = document.getElementById('resetFilter');
@@ -17,7 +17,7 @@ class PhongManager {
         applyFilterBtn.addEventListener('click', () => this.applyFilters());
         resetFilterBtn.addEventListener('click', () => this.resetFilters());
     }
-
+    // Áp dụng bộ lọc
     static async applyFilters() {
         const filters = {
             roomType: document.getElementById('filterRoomType').value,
@@ -25,7 +25,7 @@ class PhongManager {
             minPrice: document.getElementById('minPrice').value,
             maxPrice: document.getElementById('maxPrice').value
         };
-
+        // Gọi API lọc danh sách phòng
         try {
             const response = await fetch('/api/phong-admin/list?' + new URLSearchParams({
                 roomType: filters.roomType,
@@ -33,7 +33,7 @@ class PhongManager {
                 minPrice: filters.minPrice,
                 maxPrice: filters.maxPrice
             }));
-
+            // Xử lý kết quả trả về
             const data = await response.json();
             if (data.success) {
                 this.renderRooms(data.data);
@@ -44,7 +44,7 @@ class PhongManager {
             console.error('Lỗi khi áp dụng bộ lọc:', error);
         }
     }
-
+    // Reset bộ lọc
     static resetFilters() {
         // Reset các giá trị filter về mặc định
         document.getElementById('filterRoomType').value = '';
@@ -55,36 +55,111 @@ class PhongManager {
         // Load lại danh sách phòng
         this.loadRooms();
     }
-    // Thêm phương thức loadRooms
-    static async loadRooms() {
+    // Hiển thị tất cả ảnh của phòng
+    static async showAllRoomImages(roomId) {
         try {
-            const response = await fetch('/api/phong-admin/list');
+            // Gọi API lấy chi tiết phòng để có danh sách ảnh đầy đủ
+            const response = await fetch(`/api/phong-admin/detail/${roomId}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message);
+            }
+    
+            const modal = new bootstrap.Modal(document.getElementById('roomImagesModal'));
+            const container = document.getElementById('roomImagesContainer');
+            const noImagesMsg = document.getElementById('noImagesMessage');
+            
+            container.innerHTML = '';
+            
+            if (data.data.images && data.data.images.length > 0) {
+                noImagesMsg.style.display = 'none';
+                data.data.images.forEach(image => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-4 col-sm-6 mb-3';
+                    
+                    const img = document.createElement('img');
+                    img.src = image.DuongDan;
+                    img.alt = `Ảnh phòng ${roomId}`;
+                    img.className = 'img-fluid rounded';
+                    
+                    col.appendChild(img);
+                    container.appendChild(col);
+                });
+            } else {
+                noImagesMsg.style.display = 'block';
+            }
+            
+            modal.show();
+        } catch (error) {
+            console.error('Lỗi khi tải ảnh phòng:', error);
+            alert('Không thể tải ảnh phòng');
+        }
+    }
+    
+    // Load danh sách phòng
+    static async loadRooms(page = 1) {
+        try {
+            const response = await fetch(`/api/phong-admin/list?page=${page}`);
+            
+            // Kiểm tra status trước khi parse JSON
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
             if (data.success) {
                 this.renderRooms(data.data);
             } else {
-                console.error('Lỗi khi tải danh sách phòng:', data.message);
+                console.error('Lỗi:', data.message);
             }
         } catch (error) {
             console.error('Lỗi khi tải danh sách phòng:', error);
         }
     }
 
-    // Thêm phương thức renderRooms
+    static async init() {
+        // Đảm bảo DOM đã load xong
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.initAfterDOMLoad());
+        } else {
+            this.initAfterDOMLoad();
+        }
+    }
+
+    static async initAfterDOMLoad() {
+        try {
+            await this.loadRoomTypes();
+            await this.loadRoomStatuses();
+            await this.loadRooms();
+            this.setupEventHandlers();
+        } catch (error) {
+            console.error('Lỗi khởi tạo:', error);
+        }
+    }
+
+    // Hiển thị danh sách phòng lên bảng 
     static renderRooms(rooms) {
         const tbody = document.getElementById('roomsTableBody');
         tbody.innerHTML = rooms.map(room => `
             <tr>
                 <td>${room.PhongID}</td>
                 <td>
-                    ${room.ImagePhong ? 
-                        `<img src="${room.ImagePhong}" class="room-image" alt="Ảnh phòng">` : 
-                        '<span class="text-muted">Không có ảnh</span>'}
+                    <div class="room-images-preview" onclick="PhongManager.showAllRoomImages(${room.PhongID})">
+                        ${room.ImagePhong ? 
+                            `<img src="${room.ImagePhong}" class="room-thumbnail" alt="Ảnh phòng">` : 
+                            '<span class="text-muted">Không có ảnh</span>'
+                        }
+                        ${room.totalImages > 1 ? 
+                            `<span class="badge bg-info ms-2">+${room.totalImages - 1}</span>` : 
+                            ''
+                        }
+                    </div>
                 </td>
                 <td>${room.TenLoai}</td>
                 <td>${room.Gia.toLocaleString()} VNĐ</td>
                 <td>
-                    <span class="badge ${this.getStatusClass(room.TenTinhTrang)}">
+                    <span class="badge ${PhongManager.getStatusClass(room.TenTinhTrang)}">
                         ${room.TenTinhTrang}
                     </span>
                 </td>
@@ -101,8 +176,8 @@ class PhongManager {
             </tr>
         `).join('');
     }
-
-    // Thêm helper function để xác định class cho status
+    
+    // Helper function để xác định class cho status
     static getStatusClass(status) {
         const statusMap = {
             'Trống': 'bg-success',
@@ -112,13 +187,13 @@ class PhongManager {
         };
         return statusMap[status] || 'bg-secondary';
     }
-
+    // Load danh sách loại phòng
     static async loadRoomTypes() {
-        try {
+        try {// Gọi API lấy danh sách loại phòng    
             const response = await fetch('/api/loai-phong/list');
             const data = await response.json();
             if (data.success) {
-                const roomTypeSelects = document.querySelectorAll('#roomType, #editRoomType, #filterRoomType');
+                const roomTypeSelects = document.querySelectorAll('#roomType, #editRoomType, #filterRoomType');// Lấy các select có id là roomType, editRoomType, filterRoomType
                 roomTypeSelects.forEach(select => {
                     select.innerHTML = '<option value="">Chọn loại phòng</option>' +
                         data.data.map(type => `
@@ -130,13 +205,13 @@ class PhongManager {
             console.error('Lỗi khi tải danh sách loại phòng:', error);
         }
     }
-
+    // Load danh sách tình trạng phòng
     static async loadRoomStatuses() {
-        try {
+        try {//
             const response = await fetch('/api/tinh-trang-phong/list');
             const data = await response.json();
             if (data.success) {
-                const statusSelects = document.querySelectorAll('#roomStatus, #editRoomStatus, #filterStatus');
+                const statusSelects = document.querySelectorAll('#roomStatus, #editRoomStatus, #filterStatus');// Lấy các select có id là roomStatus, editRoomStatus, filterStatus
                 statusSelects.forEach(select => {
                     select.innerHTML = '<option value="">Chọn tình trạng</option>' +
                         data.data.map(status => `
@@ -149,27 +224,29 @@ class PhongManager {
         }
     }
 
+   // Xử lý thêm phòng mới
     static setupEventHandlers() {
-        // Xử lý thêm phòng mới
         const saveRoomBtn = document.getElementById('saveRoom');
         const roomForm = document.getElementById('roomForm');
-        
+        // Xử lý sự kiện khi click nút Lưu trong modal thêm phòng
         saveRoomBtn.addEventListener('click', async () => {
             if (!roomForm.checkValidity()) {
                 roomForm.reportValidity();
                 return;
             }
-
+            // Tạo form data để submit dữ liệu
             const formData = new FormData();
             formData.append('IDTinhTrang', document.getElementById('roomStatus').value);
             formData.append('IDLoai', document.getElementById('roomType').value);
             formData.append('Gia', document.getElementById('roomPrice').value);
-
+            
             const imageInput = document.getElementById('roomImage');
-            if (imageInput.files.length > 0) {
-                formData.append('imagePhong', imageInput.files[0]);
+            if (imageInput.files.length > 0) {// Nếu có chọn ảnh 
+                for (let i = 0; i < imageInput.files.length; i++) {// Duyệt qua từng file ảnh
+                    formData.append('imagePhong', imageInput.files[i]);// Thêm file vào form data
+                }
             }
-
+            // Gọi API thêm phòng mới
             try {
                 const response = await fetch('/api/phong-admin/create', {
                     method: 'POST',
@@ -197,19 +274,26 @@ class PhongManager {
 
         // Preview ảnh khi chọn file
         document.getElementById('roomImage').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').innerHTML = `
-                        <img src="${e.target.result}" class="img-thumbnail" style="max-height: 200px;">
-                    `;
+            const files = e.target.files;// Lấy danh sách file ảnh
+            const imagePreview = document.getElementById('imagePreview');// Lấy thẻ div để hiển thị ảnh
+            imagePreview.innerHTML = '';
+            if (files.length > 0) {// Nếu có chọn ảnh
+                for (let i = 0; i < files.length; i++) {// Duyệt qua từng file ảnh
+                    const reader = new FileReader();// Tạo đối tượng FileReader để đọc file ảnh
+                    // Xử lý khi load xong file ảnh
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.classList.add('img-thumbnail');// Thêm class img-thumbnail để hiển thị ảnh đẹp hơn
+                        img.style.maxHeight = '200px';
+                        imagePreview.appendChild(img);
+                    }
+                    reader.readAsDataURL(files[i]);
                 }
-                reader.readAsDataURL(file);
             }
         });
     }
-  
+    // Xử lý sự kiện khi click nút Sửa
     static async editRoom(roomId) {
         try {
             // Fetch room details
@@ -229,14 +313,16 @@ class PhongManager {
             document.getElementById('editRoomStatus').value = room.IDTinhTrang;
             document.getElementById('editRoomPrice').value = room.Gia;
             
-            // Show current image if exists
+            // Show current images if exist
             const imagePreview = document.getElementById('editImagePreview');
-            if (room.ImagePhong) {
-                imagePreview.innerHTML = `
-                    <div class="mb-2">Ảnh hiện tại:</div>
-                    <img src="${room.ImagePhong}" class="img-thumbnail" style="max-height: 200px;">
-                    <input type="hidden" id="currentImagePath" value="${room.ImagePhong}">
-                `;
+            imagePreview.innerHTML = '';
+            if (room.images && room.images.length > 0) {
+                imagePreview.innerHTML = '<div class="mb-2">Ảnh hiện tại:</div>';
+                room.images.forEach(image => {
+                    imagePreview.innerHTML += `
+                        <img src="${image.DuongDan}" class="img-thumbnail" style="max-height: 200px;">
+                    `;
+                });
             } else {
                 imagePreview.innerHTML = '<div class="text-muted">Không có ảnh</div>';
             }
@@ -249,24 +335,28 @@ class PhongManager {
             alert('Đã xảy ra lỗi khi tải thông tin phòng');
         }
     }
-
-    // Xử lý sự kiện khi click nút Lưu trong modal sửa phòng
+    // Xử lý sự kiện khi click nút Sửa trong modal sửa phòng
     static setupEditRoomHandler() {
         const updateRoomBtn = document.getElementById('updateRoom');
         const editRoomForm = document.getElementById('editRoomForm');
         
         // Preview ảnh khi chọn file trong form edit
         document.getElementById('editRoomImage').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('editImagePreview').innerHTML = `
-                        <div class="mb-2">Ảnh mới:</div>
-                        <img src="${e.target.result}" class="img-thumbnail" style="max-height: 200px;">
-                    `;
+            const files = e.target.files;
+            const imagePreview = document.getElementById('editImagePreview');
+            imagePreview.innerHTML = '';
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.classList.add('img-thumbnail');
+                        img.style.maxHeight = '200px';
+                        imagePreview.appendChild(img);
+                    }
+                    reader.readAsDataURL(files[i]);
                 }
-                reader.readAsDataURL(file);
             }
         });
         
@@ -286,7 +376,9 @@ class PhongManager {
             
             const imageInput = document.getElementById('editRoomImage');
             if (imageInput.files.length > 0) {
-                formData.append('imagePhong', imageInput.files[0]);
+                for (let i = 0; i < imageInput.files.length; i++) {
+                    formData.append('imagePhong', imageInput.files[i]);
+                }
             }
             
             try {
@@ -324,7 +416,25 @@ class PhongManager {
             alert('Đã xảy ra lỗi');
         }
     }
-
+    static async deleteRoomImage(imageId) {
+        try {
+            const response = await fetch(`/api/phong-admin/delete-image/${imageId}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                alert('Xóa ảnh thành công');
+                // Reload danh sách phòng
+                await this.loadRooms();
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error('Lỗi khi xóa ảnh:', error);
+            alert('Đã có lỗi xảy ra khi xóa ảnh');
+        }
+    }
     // Xử lý sự kiện khi click nút Xóa trong modal xác nhận
     static setupDeleteRoomHandler() {
         const confirmDeleteBtn = document.getElementById('confirmDeleteRoom');
@@ -353,6 +463,7 @@ class PhongManager {
             }
         });
     }
+
 }
 
 // Khởi tạo khi trang load xong

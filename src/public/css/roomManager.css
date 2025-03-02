@@ -1,0 +1,33 @@
+.room-image {
+    width: 100px;
+    height: 75px;
+    object-fit: cover;
+}
+.status-active {
+    color: green;
+}
+.status-inactive {
+    color: red;
+}
+.status-maintenance {
+    color: orange;
+}
+.room-images-preview {
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.room-images-preview:hover {
+    opacity: 0.8;
+}
+
+.room-thumbnail {
+    max-height: 100px;
+    border-radius: 4px;
+}
+
+#roomImagesContainer img {
+    max-height: 200px;
+    object-fit: cover;
+    width: 100%;
+}
