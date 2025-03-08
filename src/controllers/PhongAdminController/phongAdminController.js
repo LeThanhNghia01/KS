@@ -127,131 +127,6 @@ class PhongAdminController {
             });
         }
     }
-
-    static async getListRooms(req, res) {
-        try {
-            const { roomType, status, minPrice, maxPrice } = req.query;
-            
-            let query = `
-                SELECT p.*, lp.TenLoai, ttp.TenTinhTrang, nv.Ten as TenNhanVien
-                FROM Phong p
-                LEFT JOIN LoaiPhong lp ON p.IDLoai = lp.IDLoai
-                LEFT JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
-                LEFT JOIN NhanVien nv ON p.created_by = nv.NhanVienID
-                WHERE p.is_deleted = FALSE
-            `;
-    
-            const params = [];
-    
-            // Thêm điều kiện lọc theo loại phòng
-            if (roomType) {
-                query += ` AND p.IDLoai = ?`;
-                params.push(roomType);
-            }
-    
-            // Thêm điều kiện lọc theo tình trạng
-            if (status) {
-                query += ` AND p.IDTinhTrang = ?`;
-                params.push(status);
-            }
-    
-            // Thêm điều kiện lọc theo giá
-            if (minPrice) {
-                query += ` AND p.Gia >= ?`;
-                params.push(minPrice);
-            }
-            if (maxPrice) {
-                query += ` AND p.Gia <= ?`;
-                params.push(maxPrice);
-            }
-    
-            query += ` ORDER BY p.PhongID DESC`;
-    
-            const [rooms] = await db.execute(query, params);
-            
-            // Lấy ảnh đại diện cho mỗi phòng (ảnh đầu tiên)
-            for (let room of rooms) {
-                const [images] = await db.execute(
-                    `SELECT * FROM AnhPhong WHERE PhongID = ? ORDER BY AnhPhongID ASC LIMIT 1`,
-                    [room.PhongID]
-                );
-                
-                room.ImagePhong = images.length > 0 ? images[0].DuongDan : null;
-                
-                // Lấy tổng số hình ảnh
-                const [countResult] = await db.execute(
-                    `SELECT COUNT(*) as totalImages FROM AnhPhong WHERE PhongID = ?`,
-                    [room.PhongID]
-                );
-                
-                room.totalImages = countResult[0].totalImages;
-            }
-    
-            return res.json({
-                success: true,
-                message: 'Lấy danh sách phòng thành công',
-                data: rooms
-            });
-    
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách phòng:', error);
-            return res.status(500).json({
-                success: false,
-                message: 'Đã có lỗi xảy ra khi lấy danh sách phòng',
-                error: error.message
-            });
-        }
-    }
-
-    static async getRoomDetail(req, res) {
-        const roomId = req.params.id;
-    
-        try {
-            // Validate roomId
-            if (!roomId || isNaN(roomId)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'ID phòng không hợp lệ'
-                });
-            }
-    
-            const [rooms] = await db.execute(
-                `SELECT * FROM Phong WHERE PhongID = ? AND is_deleted = FALSE`,
-                [roomId]
-            );
-    
-            if (rooms.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Không tìm thấy phòng'
-                });
-            }
-            
-            // Lấy tất cả ảnh của phòng
-            const [images] = await db.execute(
-                `SELECT * FROM AnhPhong WHERE PhongID = ? ORDER BY AnhPhongID ASC`,
-                [roomId]
-            );
-            
-            const roomData = rooms[0];
-            roomData.images = images;
-    
-            return res.json({
-                success: true,
-                message: 'Lấy thông tin phòng thành công',
-                data: roomData
-            });
-    
-        } catch (error) {
-            console.error('Lỗi khi lấy thông tin phòng:', error);
-            return res.status(500).json({
-                success: false,
-                message: 'Đã có lỗi xảy ra khi lấy thông tin phòng',
-                error: error.message
-            });
-        }
-    }
-
     static async updateRoom(req, res) {
         const roomId = req.params.id;
         const { IDTinhTrang, IDLoai, Gia, deleteImageIds } = req.body;
@@ -416,6 +291,131 @@ class PhongAdminController {
             });
         }
     }
+    static async getListRooms(req, res) {
+        try {
+            const { roomType, status, minPrice, maxPrice } = req.query;
+            
+            let query = `
+                SELECT p.*, lp.TenLoai, ttp.TenTinhTrang, nv.Ten as TenNhanVien
+                FROM Phong p
+                LEFT JOIN LoaiPhong lp ON p.IDLoai = lp.IDLoai
+                LEFT JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
+                LEFT JOIN NhanVien nv ON p.created_by = nv.NhanVienID
+                WHERE p.is_deleted = FALSE
+            `;
+    
+            const params = [];
+    
+            // Thêm điều kiện lọc theo loại phòng
+            if (roomType) {
+                query += ` AND p.IDLoai = ?`;
+                params.push(roomType);
+            }
+    
+            // Thêm điều kiện lọc theo tình trạng
+            if (status) {
+                query += ` AND p.IDTinhTrang = ?`;
+                params.push(status);
+            }
+    
+            // Thêm điều kiện lọc theo giá
+            if (minPrice) {
+                query += ` AND p.Gia >= ?`;
+                params.push(minPrice);
+            }
+            if (maxPrice) {
+                query += ` AND p.Gia <= ?`;
+                params.push(maxPrice);
+            }
+    
+            query += ` ORDER BY p.PhongID DESC`;
+    
+            const [rooms] = await db.execute(query, params);
+            
+            // Lấy ảnh đại diện cho mỗi phòng (ảnh đầu tiên)
+            for (let room of rooms) {
+                const [images] = await db.execute(
+                    `SELECT * FROM AnhPhong WHERE PhongID = ? ORDER BY AnhPhongID ASC LIMIT 1`,
+                    [room.PhongID]
+                );
+                
+                room.ImagePhong = images.length > 0 ? images[0].DuongDan : null;
+                
+                // Lấy tổng số hình ảnh
+                const [countResult] = await db.execute(
+                    `SELECT COUNT(*) as totalImages FROM AnhPhong WHERE PhongID = ?`,
+                    [room.PhongID]
+                );
+                
+                room.totalImages = countResult[0].totalImages;
+            }
+    
+            return res.json({
+                success: true,
+                message: 'Lấy danh sách phòng thành công',
+                data: rooms
+            });
+    
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách phòng:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Đã có lỗi xảy ra khi lấy danh sách phòng',
+                error: error.message
+            });
+        }
+    }
+
+    static async getRoomDetail(req, res) {
+        const roomId = req.params.id;
+    
+        try {
+            // Validate roomId
+            if (!roomId || isNaN(roomId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'ID phòng không hợp lệ'
+                });
+            }
+    
+            const [rooms] = await db.execute(
+                `SELECT * FROM Phong WHERE PhongID = ? AND is_deleted = FALSE`,
+                [roomId]
+            );
+    
+            if (rooms.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Không tìm thấy phòng'
+                });
+            }
+            
+            // Lấy tất cả ảnh của phòng
+            const [images] = await db.execute(
+                `SELECT * FROM AnhPhong WHERE PhongID = ? ORDER BY AnhPhongID ASC`,
+                [roomId]
+            );
+            
+            const roomData = rooms[0];
+            roomData.images = images;
+    
+            return res.json({
+                success: true,
+                message: 'Lấy thông tin phòng thành công',
+                data: roomData
+            });
+    
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin phòng:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Đã có lỗi xảy ra khi lấy thông tin phòng',
+                error: error.message
+            });
+        }
+    }
+
+   
 
     static async deleteRoom(req, res) {
         const roomId = req.params.id;

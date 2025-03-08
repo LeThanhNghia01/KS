@@ -20,6 +20,10 @@ class LoaiPhongManager {
 
     static renderLoaiPhongList(loaiPhongList) {
         const tbody = document.getElementById('loaiPhongList');
+        if (!tbody) {
+            console.log('Không tìm thấy phần tử loaiPhongList');
+            return;
+        }
         tbody.innerHTML = loaiPhongList.map(loai => `
             <tr>
                 <td>${loai.IDLoai}</td>
@@ -39,32 +43,34 @@ class LoaiPhongManager {
 
     static setupEventHandlers() {
         const form = document.getElementById('loaiPhongForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const tenLoai = document.getElementById('tenLoai').value;
-            try {
-                const response = await fetch('/api/loai-phong/create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ tenLoai })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    alert('Thêm loại phòng thành công');
-                    form.reset();
-                    await this.loadLoaiPhong();
-                } else {
-                    alert(data.message);
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const tenLoai = document.getElementById('tenLoai').value;
+                try {
+                    const response = await fetch('/api/loai-phong/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ tenLoai })
+                    });
+    
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Thêm loại phòng thành công');
+                        form.reset();
+                        await this.loadLoaiPhong();
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi thêm loại phòng:', error);
+                    alert('Đã có lỗi xảy ra');
                 }
-            } catch (error) {
-                console.error('Lỗi khi thêm loại phòng:', error);
-                alert('Đã có lỗi xảy ra');
-            }
-        });
+            });
+        }
     }
 }
 

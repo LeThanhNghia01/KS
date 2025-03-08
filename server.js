@@ -35,6 +35,11 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, 'src'))); // Chỉ định thư mục tĩnh
 app.use('/public', express.static(path.join(__dirname, 'src/public')));
 
+// Thêm các route API công khai cho người dùng
+app.get('/api/loai-phong/list', require('./src/controllers/LoaiPhongController/loaiPhongController').getAllLoaiPhong);
+app.get('/api/tinh-trang-phong/list', require('./src/controllers/TinhTrangPhongController/tinhTrangPhongController').getAllTinhTrangPhong);
+
+
 // ===== Nhập các controller =====
 const loginUserController = require('./src/controllers/LoginUserController/LoginUserController');
 const loginAdminController = require('./src/controllers/LoginAdminController/loginadminController');
@@ -49,13 +54,14 @@ const loginUserRoutes = require('./src/controllers/LoginUserController/loginUser
 const loaiPhongRoutes = require('./src/controllers/LoaiPhongController/loaiPhongRoutes');
 const tinhTrangPhongRoutes=require('./src/controllers/TinhTrangPhongController/tinhTrangPhongRoutes')//1
 const phongAdminRoutes = require('./src/controllers/PhongAdminController/PhongAdminRoutes');
+const phongUserRoutes = require('./src/controllers/PhongUserController/phongUserRoutes');
 // ===== Các route công khai =====
 // Route xác thực
 app.post('/api/user/register', loginUserController.register); // Đăng ký người dùng
 app.post('/api/user/login', loginUserController.login); // Đăng nhập người dùng
 app.post('/api/user/google-login', loginUserController.googleLogin); // Đăng nhập bằng Google
 app.get('/api/user/check-auth', loginUserController.checkAuth); // Kiểm tra xác thực
-
+app.use('/api/phong', phongUserRoutes);
 // Routes cho User - những route user cần xác thực
 app.use('/api/user/profile', checkUserAuth);
 app.use('/api/user/bookings', checkUserAuth);
@@ -67,6 +73,7 @@ app.get('/api/admin/check-auth', loginAdminController.checkAuth);
 app.get('/LoginUser/LoginUser.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/view/LoginUser/LoginUser.html')); // Gửi file LoginUser.html
 });
+
 app.get('/RegisterUser/RegisterUser.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/view/RegisterUser/RegisterUser.html')); // Gửi file RegisterUser.html
 });
@@ -189,14 +196,21 @@ app.use((req, res, next) => {
     }
     next();
 });
-
-app.use('/api/phong-admin', phongAdminRoutes);
 // Thêm route cho trang Quản lý phòng
+app.use('/api/phong-admin', phongAdminRoutes);
 app.get('/Phong/roomManager.html', checkAdminAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'src/view/Phong/roomManager.html'));
 });
+
+
+app.get('/Phong/roomUserManager.html', checkUserAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/view/Phong/roomUserManager.html'));
+});
+
+
 // Thêm route API
 app.use('/api/loai-phong', checkAdminAuth, loaiPhongRoutes);
+app.use('/api/tinh-trang-phong', checkAdminAuth, tinhTrangPhongRoutes);
 
 // Thêm route cho trang Quản lý loại phòng
 app.get('/LoaiPhong/QuanLyLoaiPhong.html', checkAdminAuth, (req, res) => {
@@ -213,4 +227,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server đang chạy ở port ${PORT}`); // Thông báo server đã khởi động
 });
+
 require('events').EventEmitter.defaultMaxListeners = 15;
