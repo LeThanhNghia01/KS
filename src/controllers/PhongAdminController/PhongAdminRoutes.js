@@ -21,12 +21,11 @@ router.use(fileUpload({
         fileSize: 5 * 1024 * 1024 // 5MB limit
     },
     abortOnLimit: true,
-    responseOnLimit: 'File size quá lớn (max 5MB)',
+    responseOnLimit: 'File size quá lớn (max 5MB)',
     useTempFiles: true,
     tempFileDir: '/tmp/',
     debug: process.env.NODE_ENV === 'development'
 }));
-
 // Middleware xử lý lỗi upload
 router.use((err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {

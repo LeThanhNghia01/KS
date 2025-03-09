@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Tiện Nghi Phòng</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../../public/css/tiennghiphong.css">
+    <script type="module" src="../../public/js/layouts/loadHeader.js"></script>
+</head>
+<body>
+    <div id="header-placeholder"></div>
+    <header>
+        <h1>Quản Lý Tiện Nghi Phòng</h1>
+    </header>
+    <main>
+        <div id="status-message" class="status-message"></div>
+        
+        <section id="tien-nghi-form">
+            <h2>Thêm/Cập Nhật Tiện Nghi</h2>
+            <form id="tienNghiPhongForm">
+                <input type="hidden" id="tienNghiID" name="tienNghiID">
+                <div>
+                    <label for="tenTienNghi">Tên Tiện Nghi:</label>
+                    <input type="text" id="tenTienNghi" name="tenTienNghi" required>
+                </div>
+                <div>
+                    <label for="moTa">Mô Tả:</label>
+                    <textarea id="moTa" name="moTa" rows="3" required></textarea>
+                </div>
+                <div>
+                    <label for="icon">Icon:</label>
+                    <div class="icon-selector-container">
+                        <input type="text" id="icon" name="icon" placeholder="Chọn icon từ danh sách bên dưới" readonly>
+                        <div id="icon-preview" class="icon-preview"><i class=""></i></div>
+                        <button type="button" id="show-icons-btn" class="btn btn-outline-primary">Chọn Icon</button>
+                    </div>
+                    
+                    <!-- Thêm modal chọn icon -->
+                    <div id="icon-selector-modal" class="modal">
+                        <div class="modal-content">
+                            <span class="close-modal">&times;</span>
+                            <h3>Chọn Icon</h3>
+                            <input type="text" id="icon-search" placeholder="Tìm kiếm icon..." class="form-control mb-3">
+                            <div class="icon-categories">
+                                <button class="icon-category active" data-category="all">Tất cả</button>
+                                <button class="icon-category" data-category="fas">Solid</button>
+                                <button class="icon-category" data-category="far">Regular</button>
+                                <button class="icon-category" data-category="fab">Brands</button>
+                            </div>
+                            <div id="icons-container" class="icons-container">
+                                <!-- Icons will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <div>
+                    <button type="submit" id="submit-btn">Lưu Tiện Nghi</button>
+                    <button type="button" id="reset-btn">Hủy</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="tien-nghi-list">
+            <h2>Danh Sách Tiện Nghi</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên Tiện Nghi</th>
+                        <th>Mô Tả</th>
+                        <th>Icon</th>
+                        <th>Ngày Tạo</th>
+                        <th>Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody id="tienNghiPhongList">
+                    <!-- Dữ liệu sẽ được thêm vào đây bằng JavaScript -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <script src="../../public/js/layouts/headerManager.js"></script>
+    <script src="../../public/js/TienNghiPhong/tienNghiPhongManager.js"></script>
+</body>
+</html>

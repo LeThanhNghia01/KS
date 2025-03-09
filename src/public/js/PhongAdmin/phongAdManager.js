@@ -1,13 +1,27 @@
 // File: src/public/js/PhongAdmin/phongAdManager.js
 class PhongManager {
     static async init() {
-        this.setupEventHandlers();
-        this.setupEditRoomHandler();
-        this.setupDeleteRoomHandler();
-        this.setupFilterHandlers();
-        await this.loadRoomTypes();
-        await this.loadRoomStatuses();
-        await this.loadRooms(); 
+        // Đảm bảo DOM đã load xong
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.initAfterDOMLoad());
+        } else {
+            this.initAfterDOMLoad();
+        }
+    }
+    static async initAfterDOMLoad() {
+        try {
+            console.log('Initializing PhongManager...');
+            this.setupEventHandlers();
+            this.setupEditRoomHandler();
+            this.setupDeleteRoomHandler();
+            this.setupFilterHandlers();
+            await this.loadRoomTypes();
+            await this.loadRoomStatuses();
+            await this.loadRooms();
+            console.log('PhongManager initialized successfully');
+        } catch (error) {
+            console.error('Lỗi khởi tạo:', error);
+        }
     }
     // Thiết lập cho bộ lọc
     static setupFilterHandlers() {
@@ -117,16 +131,6 @@ class PhongManager {
             console.error('Lỗi khi tải danh sách phòng:', error);
         }
     }
-
-    static async init() {
-        // Đảm bảo DOM đã load xong
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.initAfterDOMLoad());
-        } else {
-            this.initAfterDOMLoad();
-        }
-    }
-
     static async initAfterDOMLoad() {
         try {
             await this.loadRoomTypes();
@@ -468,5 +472,6 @@ class PhongManager {
 
 // Khởi tạo khi trang load xong
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing PhongManager');
     PhongManager.init();
 });
