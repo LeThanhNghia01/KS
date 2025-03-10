@@ -1,7 +1,7 @@
 // src/controllers/TienNghiPhongController/tienNghiPhongRoutes.js
 const express = require('express');
 const router = express.Router();
-const TienNghiPhongController = require('./tienNghiPhongController');
+
 
 router.get('/list', async (req, res) => {
     const result = await TienNghiPhongController.getAllTienNghi();

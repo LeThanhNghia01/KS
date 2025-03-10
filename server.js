@@ -38,6 +38,7 @@ app.use('/public', express.static(path.join(__dirname, 'src/public')));
 // Thêm các route API công khai cho người dùng
 app.get('/api/loai-phong/list', require('./src/controllers/LoaiPhongController/loaiPhongController').getAllLoaiPhong);
 app.get('/api/tinh-trang-phong/list', require('./src/controllers/TinhTrangPhongController/tinhTrangPhongController').getAllTinhTrangPhong);
+app.get('/api/tien-nghi-phong/list', require('./src/controllers/tienNghiPhongController/tienNghiPhongController').getAllTienNghi);
 
 
 // ===== Nhập các controller =====
@@ -53,6 +54,7 @@ const accountsAdminRoutes = require('./src/controllers/AccountsAdminController/a
 const loginUserRoutes = require('./src/controllers/LoginUserController/loginUserRoutes');
 const loaiPhongRoutes = require('./src/controllers/LoaiPhongController/loaiPhongRoutes');
 const tinhTrangPhongRoutes=require('./src/controllers/TinhTrangPhongController/tinhTrangPhongRoutes')//1
+const tienNghiPhongRoutes=require('./src/controllers/TienNghiPhongController/tienNghiPhongRoutes')
 const phongAdminRoutes = require('./src/controllers/PhongAdminController/PhongAdminRoutes');
 const phongUserRoutes = require('./src/controllers/PhongUserController/phongUserRoutes');
 // ===== Các route công khai =====
@@ -156,7 +158,7 @@ app.use('/:folder/:file', (req, res, next) => {
         if (req.path.includes('Admin')) {
             return res.redirect('/LoginAdmin/LoginAdmin.html');
         }
-        return res.redirect('/LoginUser/LoginUser.html');
+        return res.redirect('/LoginAdmin/LoginAdmin.html');
     }
     next();
 });
@@ -211,17 +213,20 @@ app.get('/Phong/roomUserManager.html', checkUserAuth, (req, res) => {
 // Thêm route API
 app.use('/api/loai-phong', checkAdminAuth, loaiPhongRoutes);
 app.use('/api/tinh-trang-phong', checkAdminAuth, tinhTrangPhongRoutes);
+app.use('/api/tien-nghi-phong', checkAdminAuth, tienNghiPhongRoutes);   
 
 // Thêm route cho trang Quản lý loại phòng
 app.get('/LoaiPhong/QuanLyLoaiPhong.html', checkAdminAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'src/view/LoaiPhong/QuanLyLoaiPhong.html'));
 });
 
-app.use('/api/tinh-trang-phong',checkAdminAuth,tinhTrangPhongRoutes);//2
 app.get('/TinhTrangPhong/QuanLyTinhTrangPhong.html',checkAdminAuth,(req,res)=>{
     res.sendFile(path.join(__dirname,'src/view/TinhTrangPhong/QuanLyTinhTrangPhong.html'));
 });
 
+app.get('/TienNghiPhong/TienNghiPhongManager.html',checkAdminAuth,(req,res)=>{
+    res.sendFile(path.join(__dirname,'src/view/TienNghiPhong/TienNghiPhongManager.html'));
+});
 // ===== Khởi chạy Server =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

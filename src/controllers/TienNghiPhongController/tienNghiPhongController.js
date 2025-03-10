@@ -3,20 +3,26 @@ const db=require('../../config/database');
 
 class TienNghiPhongController {
 
-    static async getAllTienNghi() {
+    static async getAllTienNghi(req, res) {
         try {
-            const query = "SELECT * FROM TienNghi WHERE is_deleted = FALSE OR is_deleted IS NULL";
-            const [rows] = await db.query(query);
-            return {
+            const [tienNghi] = await db.execute(
+                `SELECT TienNghiID, TenTienNghi, MoTa, Icon 
+                 FROM TienNghi 
+                 WHERE is_deleted = FALSE
+                 ORDER BY TenTienNghi DESC`
+            );
+            
+            return res.json({
                 success: true,
-                data: rows
-            };
+                data: tienNghi
+            });
         } catch (error) {
-            console.error('Lỗi khi lấy danh sách tiện nghi phòng:', error);
-            return {
+            console.error('Lỗi khi lấy danh sách tiện nghi:', error);
+            return res.status(500).json({
                 success: false,
-                message: 'Không thể lấy danh sách tiện nghi phòng'
-            };
+                message: 'Đã có lỗi xảy ra khi lấy danh sách tiện nghi',
+                error: error.message
+            });
         }
     }
 
@@ -46,48 +52,87 @@ class TienNghiPhongController {
     }
 
     // Tạo tiện nghi phòng
-    static async createTienNghi(tenTienNghi, moTa, icon) {
+    static async createTienNghi(req, res) {
         try {
-            const query = "INSERT INTO TienNghi (TenTienNghi, MoTa, Icon) VALUES (?, ?, ?)";
-            const [result] = await db.query(query, [tenTienNghi, moTa, icon]);
-
-            return {
+            const { TenTienNghi, MoTa, Icon } = req.body;
+            
+            if (!TenTienNghi) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Vui lòng nhập tên tiện nghi'
+                });
+            }
+            
+            const [result] = await db.execute(
+                `INSERT INTO TienNghi (TenTienNghi, MoTa, Icon)
+                 VALUES (?, ?, ?)`,
+                [TenTienNghi, MoTa || null, Icon || null]
+            );
+            
+            return res.json({
                 success: true,
-                message: 'Tạo tiện nghi thành công',
-                id: result.insertId
-            };
+                message: 'Thêm tiện nghi thành công',
+                data: {
+                    TienNghiID: result.insertId,
+                    TenTienNghi,
+                    MoTa,
+                    Icon
+                }
+            });
         } catch (error) {
-            console.error('Lỗi khi tạo tiện nghi:', error);
-            return {
+            console.error('Lỗi khi thêm tiện nghi:', error);
+            return res.status(500).json({
                 success: false,
-                message: 'Không thể tạo tiện nghi'
-            };
+                message: 'Đã có lỗi xảy ra khi thêm tiện nghi',
+                error: error.message
+            });
         }
     }
 
     // Cập nhật tiện nghi phòng
-    static async updateTienNghi(id, tenTienNghi, moTa, icon) {
+    static async updateTienNghi(req, res) {
         try {
-            const query = "UPDATE TienNghi SET TenTienNghi = ?, MoTa = ?, Icon = ? WHERE TienNghiID = ?";
-            const [result] = await db.query(query, [tenTienNghi, moTa, icon, id]);
-
-            if (result.affectedRows === 0) {
-                return {
+            const tienNghiId = req.params.id;
+            const { TenTienNghi, MoTa, Icon } = req.body;
+            
+            if (!TenTienNghi) {
+                return res.status(400).json({
                     success: false,
-                    message: 'Không tìm thấy tiện nghi để cập nhật'
-                };
+                    message: 'Vui lòng nhập tên tiện nghi'
+                });
             }
-
-            return {
+            
+            const [result] = await db.execute(
+                `UPDATE TienNghi 
+                 SET TenTienNghi = ?, MoTa = ?, Icon = ?
+                 WHERE TienNghiID = ? AND is_deleted = FALSE`,
+                [TenTienNghi, MoTa || null, Icon || null, tienNghiId]
+            );
+            
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Không tìm thấy tiện nghi'
+                });
+            }
+            
+            return res.json({
                 success: true,
-                message: 'Cập nhật tiện nghi thành công'
-            };
+                message: 'Cập nhật tiện nghi thành công',
+                data: {
+                    TienNghiID: tienNghiId,
+                    TenTienNghi,
+                    MoTa,
+                    Icon
+                }
+            });
         } catch (error) {
             console.error('Lỗi khi cập nhật tiện nghi:', error);
-            return {
+            return res.status(500).json({
                 success: false,
-                message: 'Không thể cập nhật tiện nghi'
-            };
+                message: 'Đã có lỗi xảy ra khi cập nhật tiện nghi',
+                error: error.message
+            });
         }
     }
 

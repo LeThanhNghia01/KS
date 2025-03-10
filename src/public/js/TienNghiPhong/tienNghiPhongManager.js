@@ -1,10 +1,6 @@
 //src/public/js/TienNghiPhong/tienNghiPhongManager.js
 class tienNghiPhongManager {
-    static async init() {
-        await this.loadTienNghiPhong();
-        this.setupEventHandlers();
-        this.setupIconSelector();
-    }
+   
     static iconList = [
         // Danh sách icons phổ biến từ Font Awesome
         { name: 'Wi-Fi', class: 'fas fa-wifi', category: 'fas' },
@@ -71,6 +67,11 @@ class tienNghiPhongManager {
 
         // Thêm nhiều icon khác nếu cần
     ];
+    static async init() {
+        await this.loadTienNghiPhong();
+        this.setupEventHandlers();
+        this.setupIconSelector();
+    }
     static async loadTienNghiPhong() {
         try {
             const response = await fetch('/api/tien-nghi-phong/list');
