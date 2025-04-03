@@ -10,27 +10,56 @@ class PhongUserController {
             const limit = parseInt(req.query.limit) || 9;
             const offset = (page - 1) * limit;
             
+            // Get filter parameters
+            const loaiPhong = req.query.loaiPhong || '';
+            const search = req.query.search || '';
+            const maxPrice = req.query.maxPrice ? parseInt(req.query.maxPrice) : 0;
+            
+            // Build WHERE clause for filtering
+            let whereClause = 'p.is_deleted = 0';
+            const queryParams = [];
+            
+            // Add loaiPhong filter if provided
+            if (loaiPhong) {
+                whereClause += ' AND p.IDLoai = ?';
+                queryParams.push(loaiPhong);
+            }
+            
+            // Add search filter if provided
+            if (search) {
+                whereClause += ' AND (lp.TenLoai LIKE ? OR p.PhongID LIKE ?)';
+                queryParams.push(`%${search}%`, `%${search}%`);
+            }
+            
+            // Add maxPrice filter if provided
+            if (maxPrice > 0) {
+                whereClause += ' AND p.Gia <= ?';
+                queryParams.push(maxPrice);
+            }
+            
             // Lấy tổng số phòng để tính số trang
             const [countResult] = await db.query(`
                 SELECT COUNT(*) as total
                 FROM Phong p
-                WHERE p.is_deleted = 0
-            `);
+                JOIN LoaiPhong lp ON p.IDLoai = lp.IDLoai
+                WHERE ${whereClause}
+            `, queryParams);
             const total = countResult[0].total;
             
             // Tính toán phân trang
             const lastPage = Math.ceil(total / limit);
             
             // Lấy danh sách phòng theo phân trang
+            const finalQueryParams = [...queryParams, limit, offset];
             const [rooms] = await db.query(`
                 SELECT p.PhongID, p.Gia, p.IDLoai, p.IDTinhTrang, 
                        lp.TenLoai, ttp.TenTinhTrang
                 FROM Phong p
                 JOIN LoaiPhong lp ON p.IDLoai = lp.IDLoai
                 JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
-                WHERE p.is_deleted = 0
+                WHERE ${whereClause}
                 LIMIT ? OFFSET ?
-            `, [limit, offset]);
+            `, finalQueryParams);
     
             // Lấy ảnh cho từng phòng
             for (let room of rooms) {

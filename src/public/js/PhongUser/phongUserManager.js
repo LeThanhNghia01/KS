@@ -7,9 +7,26 @@ const PhongUserManager = {
     
     // Khởi tạo
     init() {
-        // Load các thành phần
-        this.loadLoaiPhong();
-        this.loadRooms();
+           // Load loại phòng first
+        this.loadLoaiPhong().then(() => {
+            // Check for URL parameters after loại phòng is loaded
+            const urlParams = new URLSearchParams(window.location.search);
+            const loaiPhongParam = urlParams.get('loaiPhong');
+            
+            if (loaiPhongParam) {
+                // Set the dropdown value
+                const loaiPhongFilter = document.getElementById('loaiPhongFilter');
+                if (loaiPhongFilter) {
+                    loaiPhongFilter.value = loaiPhongParam;
+                }
+                
+                // Cập nhật tên hiển thị của loại phòng đang xem
+                this.updateCurrentRoomTypeDisplay(loaiPhongParam);
+            }
+            
+            // Now load rooms with the filter applied
+            this.loadRooms();
+        });
         
         // Xử lý sự kiện
         this.setupEventListeners();
@@ -24,7 +41,24 @@ const PhongUserManager = {
             });
         }
     },
-    
+    updateCurrentRoomTypeDisplay(loaiPhongId) {
+        // Tìm tên loại phòng từ ID
+        const selectedRoomType = this.loaiPhongList.find(loai => loai.IDLoai == loaiPhongId);
+        
+        // Cập nhật tiêu đề nếu tìm thấy
+        if (selectedRoomType) {
+            const bannerTitle = document.querySelector('.banner-section h1');
+            if (bannerTitle) {
+                bannerTitle.textContent = `Phòng ${selectedRoomType.TenLoai}`;
+            }
+            
+            // Cập nhật mô tả
+            const bannerDesc = document.querySelector('.banner-section p.lead');
+            if (bannerDesc) {
+                bannerDesc.textContent = `Khám phá các phòng ${selectedRoomType.TenLoai} sang trọng và tiện nghi của chúng tôi`;
+            }
+        }
+    },
     // Thiết lập các sự kiện
     setupEventListeners() {
         // Sự kiện search
@@ -50,6 +84,22 @@ const PhongUserManager = {
         if (applyFilterBtn) {
             applyFilterBtn.addEventListener('click', () => {
                 this.currentPage = 1;
+                
+                // Lấy giá trị loại phòng từ dropdown
+                const loaiPhongValue = document.getElementById('loaiPhongFilter').value;
+                
+                // Nếu có loại phòng được chọn, cập nhật URL nhưng không reload trang
+                if (loaiPhongValue) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('loaiPhong', loaiPhongValue);
+                    window.history.pushState({}, '', url.toString());
+                } else {
+                    // Nếu chọn "Tất cả", xóa tham số loại phòng khỏi URL
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('loaiPhong');
+                    window.history.pushState({}, '', url.toString());
+                }
+                
                 this.loadRooms();
             });
         }
@@ -98,9 +148,39 @@ const PhongUserManager = {
                         loaiPhongFilter.appendChild(option);
                     });
                 }
+                
+                // Lấy thông tin loại phòng hiện tại từ URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentLoaiPhong = urlParams.get('loaiPhong');
+                
+                // Render các liên kết loại phòng
+                const roomTypesContainer = document.getElementById('roomTypesLinks');
+                if (roomTypesContainer) {
+                    roomTypesContainer.innerHTML = '';
+                    
+                    // Add "All" link
+                    const allLink = document.createElement('a');
+                    allLink.href = 'roomUser.html';
+                    allLink.className = `btn ${!currentLoaiPhong ? 'btn-primary' : 'btn-outline-primary'} me-2 mb-2`;
+                    allLink.textContent = 'Tất cả';
+                    roomTypesContainer.appendChild(allLink);
+                    
+                    // Add link for each room type
+                    this.loaiPhongList.forEach(loai => {
+                        const link = document.createElement('a');
+                        link.href = `roomUser.html?loaiPhong=${loai.IDLoai}`;
+                        // Đánh dấu link hiện tại
+                        link.className = `btn ${currentLoaiPhong == loai.IDLoai ? 'btn-primary' : 'btn-outline-primary'} me-2 mb-2`;
+                        link.textContent = loai.TenLoai; 
+                        roomTypesContainer.appendChild(link);
+                    });
+                }
+                return true;
             }
+            return false;
         } catch (error) {
             console.error('Error loading room types:', error);
+            return false;
         }
     },
     
@@ -351,10 +431,14 @@ const PhongUserManager = {
         renderPagination() {
             const pagination = document.getElementById('pagination');
             if (!pagination) return;
-    
+        
             // Xóa nội dung cũ
             pagination.innerHTML = '';
-    
+        
+            // Lấy tham số loại phòng hiện tại
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentLoaiPhong = urlParams.get('loaiPhong');
+        
             // Tạo nút Previous
             const prevLi = document.createElement('li');
             prevLi.className = `page-item ${this.currentPage === 1 ? 'disabled' : ''}`;
@@ -367,11 +451,15 @@ const PhongUserManager = {
                 e.preventDefault();
                 if (this.currentPage > 1) {
                     this.currentPage--;
+                    // Giữ nguyên filter khi chuyển trang
+                    if (currentLoaiPhong) {
+                        document.getElementById('loaiPhongFilter').value = currentLoaiPhong;
+                    }
                     this.loadRooms();
                 }
             });
             pagination.appendChild(prevLi);
-    
+        
             // Tạo các nút trang
             for (let i = 1; i <= this.totalPages; i++) {
                 const pageLi = document.createElement('li');
@@ -380,11 +468,15 @@ const PhongUserManager = {
                 pageLi.addEventListener('click', (e) => {
                     e.preventDefault();
                     this.currentPage = i;
+                    // Giữ nguyên filter khi chuyển trang
+                    if (currentLoaiPhong) {
+                        document.getElementById('loaiPhongFilter').value = currentLoaiPhong;
+                    }
                     this.loadRooms();
                 });
                 pagination.appendChild(pageLi);
             }
-    
+        
             // Tạo nút Next
             const nextLi = document.createElement('li');
             nextLi.className = `page-item ${this.currentPage === this.totalPages ? 'disabled' : ''}`;
@@ -397,6 +489,10 @@ const PhongUserManager = {
                 e.preventDefault();
                 if (this.currentPage < this.totalPages) {
                     this.currentPage++;
+                    // Giữ nguyên filter khi chuyển trang
+                    if (currentLoaiPhong) {
+                        document.getElementById('loaiPhongFilter').value = currentLoaiPhong;
+                    }
                     this.loadRooms();
                 }
             });
