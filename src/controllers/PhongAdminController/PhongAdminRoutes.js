@@ -77,7 +77,19 @@ router.put('/update/:id', checkAdminAuth, async (req, res) => {
     }
 });
 // Route xóa phòng
-router.delete('/delete/:id', checkAdminAuth, PhongAdminController.deleteRoom);
+// Route xóa phòng
+router.delete('/delete/:id', checkAdminAuth, async (req, res) => {
+    try {
+        await PhongAdminController.deleteRoom(req, res);
+    } catch (error) {
+        console.error('Lỗi khi xóa phòng:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Đã có lỗi xảy ra khi xóa phòng',
+            error: error.message
+        });
+    }
+});
 
 // Thêm route mới để xóa một ảnh cụ thể
 router.delete('/delete-image/:imageId', checkAdminAuth, PhongAdminController.deleteRoomImage);

@@ -410,14 +410,25 @@ class PhongManager {
 
     // Bổ sung chức năng xóa phòng
     static async deleteRoom(roomId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa phòng này không?')) {
+            return;
+        }
+        
         try {
-            // Hiển thị modal xác nhận
-            document.getElementById('roomIdToDelete').value = roomId;
-            const deleteModal = new bootstrap.Modal(document.getElementById('deleteRoomModal'));
-            deleteModal.show();
+            const response = await fetch(`/api/phong-admin/delete/${roomId}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                alert('Xóa phòng thành công');
+                await this.loadRooms();
+            } else {
+                alert('Xóa phòng thất bại: ' + (data.message || 'Lỗi không xác định'));
+            }
         } catch (error) {
-            console.error('Lỗi khi chuẩn bị xóa phòng:', error);
-            alert('Đã xảy ra lỗi');
+            console.error('Lỗi khi xóa phòng:', error);
+            alert('Đã có lỗi xảy ra khi xóa phòng: ' + error.message);
         }
     }
     static async deleteRoomImage(imageId) {

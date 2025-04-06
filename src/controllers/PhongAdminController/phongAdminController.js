@@ -414,12 +414,9 @@ class PhongAdminController {
             });
         }
     }
-
-   
-
     static async deleteRoom(req, res) {
         const roomId = req.params.id;
-    
+        
         try {
             // Validate roomId
             if (!roomId || isNaN(roomId)) {
@@ -428,31 +425,31 @@ class PhongAdminController {
                     message: 'ID phòng không hợp lệ'
                 });
             }
-    
+            
             // Check if room exists
             const [rooms] = await db.execute(
                 `SELECT * FROM Phong WHERE PhongID = ? AND is_deleted = FALSE`,
                 [roomId]
             );
-    
+            
             if (rooms.length === 0) {
                 return res.status(404).json({
                     success: false,
                     message: 'Không tìm thấy phòng'
                 });
             }
-    
+            
             // Soft delete the room
             await db.execute(
                 `UPDATE Phong SET is_deleted = TRUE WHERE PhongID = ?`,
                 [roomId]
             );
-    
+            
             return res.json({
                 success: true,
                 message: 'Xóa phòng thành công'
             });
-    
+            
         } catch (error) {
             console.error('Lỗi khi xóa phòng:', error);
             return res.status(500).json({
