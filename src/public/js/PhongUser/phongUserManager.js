@@ -116,16 +116,16 @@ const PhongUserManager = {
                         const data = await response.json();
                         
                         if (data.isAuthenticated) {
-                            window.location.href = `/Phong/datPhong.html?phongId=${roomId}`;
+                            window.location.href = `/DatPhong/datPhong.html?phongId=${roomId}`;
                         } else {
                             alert('Vui lòng đăng nhập để đặt phòng');
-                            window.location.href = '/LoginUser/LoginUser.html?redirect=' + encodeURIComponent(`/Phong/datPhong.html?phongId=${roomId}`);
+                            window.location.href = '/LoginUser/LoginUser.html?redirect=' + encodeURIComponent(`/DatPhong/datPhong.html?phongId=${roomId}`);
                         }
                     } catch (error) {
                         console.error("Error checking auth status:", error);
                         // Nếu có lỗi trong quá trình kiểm tra, hiển thị thông báo lỗi
                         alert('Vui lòng đăng nhập để đặt phòng');
-                        window.location.href = '/LoginUser/LoginUser.html?redirect=' + encodeURIComponent(`/Phong/datPhong.html?phongId=${roomId}`);
+                        window.location.href = '/LoginUser/LoginUser.html?redirect=' + encodeURIComponent(`/DatPhong/datPhong.html?phongId=${roomId}`);
                     }
                 }
             });
