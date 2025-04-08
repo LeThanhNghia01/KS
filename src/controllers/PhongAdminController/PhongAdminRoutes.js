@@ -36,7 +36,6 @@ router.use((err, req, res, next) => {
     }
     next(err);
 });
-// Trong PhongAdminRoutes.js
 router.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({
@@ -63,10 +62,10 @@ router.post('/create', checkAdminAuth, async (req, res) => {
 router.get('/list', checkAdminAuth, PhongAdminController.getListRooms); 
 // Route lấy chi tiết phòng
 router.get('/detail/:id', checkAdminAuth, PhongAdminController.getRoomDetail);
-// Route cập nhật phòng
+// Thêm route chỉnh sửa phòng
 router.put('/update/:id', checkAdminAuth, async (req, res) => {
     try {
-        await PhongAdminController.updateRooms(req, res);
+        await PhongAdminController.updateRoom(req, res);
     } catch (error) {
         console.error('Lỗi khi cập nhật phòng:', error);
         res.status(500).json({
@@ -77,10 +76,9 @@ router.put('/update/:id', checkAdminAuth, async (req, res) => {
     }
 });
 // Route xóa phòng
-// Route xóa phòng
 router.delete('/delete/:id', checkAdminAuth, async (req, res) => {
     try {
-        await PhongAdminController.deleteRoom(req, res);
+        await PhongAdminController.deleteRoom(req, res);    
     } catch (error) {
         console.error('Lỗi khi xóa phòng:', error);
         res.status(500).json({

@@ -143,49 +143,50 @@
             </div>
         </div>
     </div>
-
     <!-- Edit Room Modal -->
-    <div class="modal fade" id="editRoomModal" tabindex="-1" aria-labelledby="editRoomModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editRoomModal" tabindex="-1" aria-labelledby="editRoomModalLabel" aria-modal="true" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editRoomModalLabel">Chỉnh sửa thông tin phòng</h5>
+                    <h5 class="modal-title" id="editRoomModalLabel">Chỉnh sửa phòng</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="editRoomForm" class="needs-validation" novalidate>
+                    <form id="editRoomForm">
                         <input type="hidden" id="editRoomId">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="editRoomType" class="form-label">Loại phòng</label>
-                                <select id="editRoomType" class="form-select" required>
-                                    <!-- Options will be loaded by JS -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editRoomType" class="form-label">Loại phòng <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editRoomType" required>
+                                    <option value="">Chọn loại phòng</option>
+                                    <!-- Options will be loaded dynamically -->
                                 </select>
-                                <div class="invalid-feedback">Vui lòng chọn loại phòng</div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editRoomStatus" class="form-label">Tình trạng phòng</label>
-                                <select id="editRoomStatus" class="form-select" required>
-                                    <!-- Options will be loaded by JS -->
+                            <div class="col-md-6">
+                                <label for="editRoomStatus" class="form-label">Tình trạng phòng <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editRoomStatus" required>
+                                    <option value="">Chọn tình trạng</option>
+                                    <!-- Options will be loaded dynamically -->
                                 </select>
-                                <div class="invalid-feedback">Vui lòng chọn tình trạng phòng</div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editRoomPrice" class="form-label">Giá phòng (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editRoomPrice" min="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editRoomImage" class="form-label">Thêm hình ảnh mới</label>
+                                <input type="file" class="form-control" id="editRoomImage" name="imagePhong" multiple accept="image/*">
+                                <div class="form-text">Có thể chọn nhiều ảnh cùng lúc</div>
+                                <div id="editImagePreview" class="mt-2 row g-2"></div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="editRoomPrice" class="form-label">Giá phòng (VNĐ)</label>
-                            <input type="number" class="form-control" id="editRoomPrice" required min="0">
-                            <div class="invalid-feedback">Vui lòng nhập giá phòng hợp lệ</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editRoomImage" class="form-label">Hình ảnh phòng</label>
-                            <input type="file" class="form-control" id="editRoomImage" accept="image/*">
-                            <div class="form-text">Để trống nếu muốn giữ ảnh hiện tại</div>
-                        </div>
-                        <div id="editImagePreview" class="mb-3 row g-2">
-                            <!-- Preview will be displayed here -->
-                        </div>
-                        <div class="mb-3" id="noEditImages" style="display: none;">
-                            <p class="text-muted">Phòng này chưa có ảnh nào</p>
+                            <label class="form-label">Ảnh hiện có</label>
+                            <div id="currentImages" class="row g-2">
+                                <!-- Current images will be loaded here -->
+                            </div>
                         </div>
                     </form>
                 </div>

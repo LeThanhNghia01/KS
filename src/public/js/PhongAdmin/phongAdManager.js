@@ -12,8 +12,8 @@ class PhongManager {
         try {
             console.log('Initializing PhongManager...');
             this.setupEventHandlers();
-            this.setupEditRoomHandler();
             this.setupDeleteRoomHandler();
+            this.setupEditRoomHandler(); 
             this.setupFilterHandlers();
             await this.loadRoomTypes();
             await this.loadRoomStatuses();
@@ -85,7 +85,6 @@ class PhongManager {
             const noImagesMsg = document.getElementById('noImagesMessage');
             
             container.innerHTML = '';
-            
             if (data.data.images && data.data.images.length > 0) {
                 noImagesMsg.style.display = 'none';
                 data.data.images.forEach(image => {
@@ -131,17 +130,6 @@ class PhongManager {
             console.error('Lỗi khi tải danh sách phòng:', error);
         }
     }
-    static async initAfterDOMLoad() {
-        try {
-            await this.loadRoomTypes();
-            await this.loadRoomStatuses();
-            await this.loadRooms();
-            this.setupEventHandlers();
-        } catch (error) {
-            console.error('Lỗi khởi tạo:', error);
-        }
-    }
-
     // Hiển thị danh sách phòng lên bảng 
     static renderRooms(rooms) {
         const tbody = document.getElementById('roomsTableBody');
@@ -180,7 +168,6 @@ class PhongManager {
             </tr>
         `).join('');
     }
-    
     // Helper function để xác định class cho status
     static getStatusClass(status) {
         const statusMap = {
@@ -193,11 +180,11 @@ class PhongManager {
     }
     // Load danh sách loại phòng
     static async loadRoomTypes() {
-        try {// Gọi API lấy danh sách loại phòng    
+        try {
             const response = await fetch('/api/loai-phong/list');
             const data = await response.json();
             if (data.success) {
-                const roomTypeSelects = document.querySelectorAll('#roomType, #editRoomType, #filterRoomType');// Lấy các select có id là roomType, editRoomType, filterRoomType
+                const roomTypeSelects = document.querySelectorAll('#roomType, #editRoomType, #filterRoomType');
                 roomTypeSelects.forEach(select => {
                     select.innerHTML = '<option value="">Chọn loại phòng</option>' +
                         data.data.map(type => `
@@ -209,13 +196,14 @@ class PhongManager {
             console.error('Lỗi khi tải danh sách loại phòng:', error);
         }
     }
+    
     // Load danh sách tình trạng phòng
     static async loadRoomStatuses() {
-        try {//
+        try {
             const response = await fetch('/api/tinh-trang-phong/list');
             const data = await response.json();
             if (data.success) {
-                const statusSelects = document.querySelectorAll('#roomStatus, #editRoomStatus, #filterStatus');// Lấy các select có id là roomStatus, editRoomStatus, filterStatus
+                const statusSelects = document.querySelectorAll('#roomStatus, #editRoomStatus, #filterStatus');
                 statusSelects.forEach(select => {
                     select.innerHTML = '<option value="">Chọn tình trạng</option>' +
                         data.data.map(status => `
@@ -227,7 +215,6 @@ class PhongManager {
             console.error('Lỗi khi tải danh sách tình trạng:', error);
         }
     }
-
    // Xử lý thêm phòng mới
     static setupEventHandlers() {
         const saveRoomBtn = document.getElementById('saveRoom');
@@ -275,7 +262,6 @@ class PhongManager {
                 alert('Đã có lỗi xảy ra khi thêm phòng');
             }
         });
-
         // Preview ảnh khi chọn file
         document.getElementById('roomImage').addEventListener('change', (e) => {
             const files = e.target.files;// Lấy danh sách file ảnh
@@ -297,58 +283,153 @@ class PhongManager {
             }
         });
     }
-    // Xử lý sự kiện khi click nút Sửa
+    // Thêm hàm editRoom
     static async editRoom(roomId) {
         try {
-            // Fetch room details
             const response = await fetch(`/api/phong-admin/detail/${roomId}`);
             const data = await response.json();
             
             if (!data.success) {
-                alert('Không thể tải thông tin phòng');
-                return;
+                throw new Error(data.message);
             }
+    
+            // Điền thông tin vào form chỉnh sửa
+            document.getElementById('editRoomId').value = data.data.PhongID;
+            document.getElementById('editRoomType').value = data.data.IDLoai;
+            document.getElementById('editRoomStatus').value = data.data.IDTinhTrang;
+            document.getElementById('editRoomPrice').value = data.data.Gia;
+    
+            // Hiển thị ảnh hiện có
+            const currentImagesContainer = document.getElementById('currentImages');
+            currentImagesContainer.innerHTML = '';
             
-            const room = data.data;
-            
-            // Fill form with room data
-            document.getElementById('editRoomId').value = room.PhongID;
-            document.getElementById('editRoomType').value = room.IDLoai;
-            document.getElementById('editRoomStatus').value = room.IDTinhTrang;
-            document.getElementById('editRoomPrice').value = room.Gia;
-            
-            // Show current images if exist
-            const imagePreview = document.getElementById('editImagePreview');
-            imagePreview.innerHTML = '';
-            if (room.images && room.images.length > 0) {
-                imagePreview.innerHTML = '<div class="mb-2">Ảnh hiện tại:</div>';
-                room.images.forEach(image => {
-                    imagePreview.innerHTML += `
-                        <img src="${image.DuongDan}" class="img-thumbnail" style="max-height: 200px;">
-                    `;
+            if (data.data.images && data.data.images.length > 0) {
+                data.data.images.forEach(image => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-4 col-sm-6 mb-3 position-relative';
+                    col.setAttribute('data-image-id', image.AnhPhongID);
+                    
+                    const img = document.createElement('img');
+                    img.src = image.DuongDan;
+                    img.alt = `Ảnh phòng ${roomId}`;
+                    img.className = 'img-thumbnail';
+                    img.style.maxHeight = '150px';
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-danger btn-sm position-absolute top-0 end-0 m-1';
+                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        if (confirm('Bạn có chắc chắn muốn xóa ảnh này không?')) {
+                            const success = await PhongManager.deleteRoomImage(image.AnhPhongID);
+                            if (success) {
+                                col.remove();
+                            }
+                        }
+                    };
+                    col.appendChild(img);
+                    col.appendChild(deleteBtn);
+                    currentImagesContainer.appendChild(col);
                 });
-            } else {
-                imagePreview.innerHTML = '<div class="text-muted">Không có ảnh</div>';
             }
+            // Hiển thị modal
+            const modalElement = document.getElementById('editRoomModal');
+            const modal = new bootstrap.Modal(modalElement);
             
-            // Show modal
-            const editModal = new bootstrap.Modal(document.getElementById('editRoomModal'));
-            editModal.show();
+            // Khi modal hiển thị, thiết lập focus vào một phần tử trong modal
+            modalElement.addEventListener('shown.bs.modal', function () {
+                document.getElementById('editRoomType').focus();
+            }, { once: true }); // Chỉ chạy một lần
+            
+            modal.show();
         } catch (error) {
-            console.error('Lỗi khi lấy thông tin phòng:', error);
-            alert('Đã xảy ra lỗi khi tải thông tin phòng');
+            console.error('Lỗi khi tải thông tin phòng:', error);
+            alert('Không thể tải thông tin phòng để chỉnh sửa');
         }
     }
-    // Xử lý sự kiện khi click nút Sửa trong modal sửa phòng
+    // Thêm hàm xử lý cập nhật phòng
     static setupEditRoomHandler() {
         const updateRoomBtn = document.getElementById('updateRoom');
         const editRoomForm = document.getElementById('editRoomForm');
         
-        // Preview ảnh khi chọn file trong form edit
+        updateRoomBtn.addEventListener('click', async () => {
+            if (!editRoomForm.checkValidity()) {
+                editRoomForm.reportValidity();
+                return;
+            }
+            
+            const roomId = document.getElementById('editRoomId').value;
+            const formData = new FormData();
+            formData.append('IDTinhTrang', document.getElementById('editRoomStatus').value);
+            formData.append('IDLoai', document.getElementById('editRoomType').value);
+            formData.append('Gia', document.getElementById('editRoomPrice').value);
+            
+            const imageInput = document.getElementById('editRoomImage');
+            if (imageInput.files.length > 0) {
+                for (let i = 0; i < imageInput.files.length; i++) {
+                    formData.append('imagePhong', imageInput.files[i]);
+                }
+            }
+            
+            try {
+                // Hiển thị trạng thái loading
+                updateRoomBtn.disabled = true;
+                updateRoomBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang lưu...';
+                
+                // Bổ sung log để kiểm tra
+                console.log('Bắt đầu gửi yêu cầu cập nhật phòng');
+                console.log('Room ID:', roomId);
+                
+                const response = await fetch(`/api/phong-admin/update/${roomId}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+    
+                console.log('Đã nhận phản hồi:', response.status);
+                
+                // Kiểm tra status trước khi parse JSON
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+    
+                const data = await response.json();
+                console.log('Phản hồi JSON:', data);
+                
+                if (data.success) {
+                    alert('Cập nhật phòng thành công');
+                    
+                    // Đóng modal đúng cách
+                    const modalElement = document.getElementById('editRoomModal');
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                        
+                        // Clean up any potential focus issues
+                        modalElement.addEventListener('hidden.bs.modal', function() {
+                            editRoomForm.reset();
+                            document.getElementById('editImagePreview').innerHTML = '';
+                            document.getElementById('currentImages').innerHTML = '';
+                            // Reload danh sách phòng
+                            PhongManager.loadRooms();
+                        }, { once: true });
+                    }
+                }
+            } catch (error) {
+                console.error('Lỗi khi cập nhật phòng:', error);
+                alert('Đã có lỗi xảy ra khi cập nhật phòng: ' + error.message);
+            } finally {
+                // Luôn đặt lại nút
+                updateRoomBtn.disabled = false;
+                updateRoomBtn.innerHTML = 'Lưu thay đổi';
+            }
+        });
+        
+        // Preview ảnh khi chọn file trong modal chỉnh sửa
         document.getElementById('editRoomImage').addEventListener('change', (e) => {
             const files = e.target.files;
             const imagePreview = document.getElementById('editImagePreview');
             imagePreview.innerHTML = '';
+            
             if (files.length > 0) {
                 for (let i = 0; i < files.length; i++) {
                     const reader = new FileReader();
@@ -363,100 +444,50 @@ class PhongManager {
                 }
             }
         });
-        
-        updateRoomBtn.addEventListener('click', async () => {
-            if (!editRoomForm.checkValidity()) {
-                editRoomForm.reportValidity();
-                return;
-            }
-            
-            const roomId = document.getElementById('editRoomId').value;
-            const formData = new FormData();
-            
-            formData.append('IDTinhTrang', document.getElementById('editRoomStatus').value);
-            formData.append('IDLoai', document.getElementById('editRoomType').value);
-            formData.append('Gia', document.getElementById('editRoomPrice').value);
-            formData.append('currentImagePath', document.getElementById('currentImagePath')?.value || '');
-            
-            const imageInput = document.getElementById('editRoomImage');
-            if (imageInput.files.length > 0) {
-                for (let i = 0; i < imageInput.files.length; i++) {
-                    formData.append('imagePhong', imageInput.files[i]);
-                }
-            }
-            
-            try {
-                const response = await fetch(`/api/phong-admin/update/${roomId}`, {
-                    method: 'PUT',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    alert('Cập nhật phòng thành công');
-                    // Đóng modal và reload danh sách
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('editRoomModal'));
-                    modal.hide();
-                    await this.loadRooms();
-                } else {
-                    alert(data.message);
-                }
-            } catch (error) {
-                console.error('Lỗi khi cập nhật phòng:', error);
-                alert('Đã có lỗi xảy ra khi cập nhật phòng');
-            }
-        });
     }
-
     // Bổ sung chức năng xóa phòng
-    static async deleteRoom(roomId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa phòng này không?')) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/phong-admin/delete/${roomId}`, {
-                method: 'DELETE'
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                alert('Xóa phòng thành công');
-                await this.loadRooms();
-            } else {
-                alert('Xóa phòng thất bại: ' + (data.message || 'Lỗi không xác định'));
-            }
-        } catch (error) {
-            console.error('Lỗi khi xóa phòng:', error);
-            alert('Đã có lỗi xảy ra khi xóa phòng: ' + error.message);
-        }
-    }
     static async deleteRoomImage(imageId) {
         try {
+            // Hiển thị spinner hoặc UI loading nếu cần
+            console.log('Đang xóa ảnh:', imageId);
+            
             const response = await fetch(`/api/phong-admin/delete-image/${imageId}`, {
                 method: 'DELETE'
             });
             
+            // Kiểm tra status trước khi parse JSON
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log('Phản hồi khi xóa ảnh:', data);
+            
             if (data.success) {
+                // Tìm và xóa ảnh khỏi giao diện ngay lập tức
+                const imageElement = document.querySelector(`[data-image-id="${imageId}"]`);
+                if (imageElement) {
+                    imageElement.remove();
+                }
+                
+                // Alert có thể được bỏ qua trong môi trường sản xuất và thay thế bằng toast notification
                 alert('Xóa ảnh thành công');
-                // Reload danh sách phòng
-                await this.loadRooms();
+                return true; // Trả về true để xác nhận xóa thành công
             } else {
-                alert(data.message);
+                alert(data.message || 'Không thể xóa ảnh');
+                return false;
             }
         } catch (error) {
             console.error('Lỗi khi xóa ảnh:', error);
-            alert('Đã có lỗi xảy ra khi xóa ảnh');
+            alert('Đã có lỗi xảy ra khi xóa ảnh: ' + error.message);
+            return false;
         }
     }
     // Xử lý sự kiện khi click nút Xóa trong modal xác nhận
     static setupDeleteRoomHandler() {
         const confirmDeleteBtn = document.getElementById('confirmDeleteRoom');
-        
         confirmDeleteBtn.addEventListener('click', async () => {
             const roomId = document.getElementById('roomIdToDelete').value;
-            
             try {
                 const response = await fetch(`/api/phong-admin/delete/${roomId}`, {
                     method: 'DELETE'
@@ -478,9 +509,7 @@ class PhongManager {
             }
         });
     }
-
 }
-
 // Khởi tạo khi trang load xong
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing PhongManager');

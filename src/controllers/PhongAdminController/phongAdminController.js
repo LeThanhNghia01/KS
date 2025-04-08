@@ -110,7 +110,6 @@ class PhongAdminController {
             });
 
         } catch (error) {
-            // Clean up uploaded files if there was an error
             for (const filePath of uploadedFilePaths) {
                 try {
                     await fs.unlink(filePath);
@@ -127,170 +126,7 @@ class PhongAdminController {
             });
         }
     }
-    static async updateRoom(req, res) {
-        const roomId = req.params.id;
-        const { IDTinhTrang, IDLoai, Gia, deleteImageIds } = req.body;
-        let uploadedFilePaths = [];
-    
-        try {
-            // Validate input
-            if (!roomId || isNaN(roomId) || !IDTinhTrang || !IDLoai || !Gia) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Vui lòng điền đầy đủ thông tin bắt buộc'
-                });
-            }
-    
-            // Validate price
-            if (isNaN(Gia) || Gia <= 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Giá phòng không hợp lệ'
-                });
-            }
-    
-            // Check if room exists
-            const [rooms] = await db.execute(
-                `SELECT * FROM Phong WHERE PhongID = ? AND is_deleted = FALSE`,
-                [roomId]
-            );
-    
-            if (rooms.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Không tìm thấy phòng'
-                });
-            }
-    
-            // Get updater info from session
-            let updated_by;
-            if (req.session && req.session.admin && req.session.admin.NhanVienID) {
-                updated_by = req.session.admin.NhanVienID;
-            } else {
-                // Nếu không có session, thử lấy NhanVienID từ database dựa vào role admin
-                const [admins] = await db.execute(
-                    'SELECT NhanVienID FROM NhanVien WHERE RoleID = 1 LIMIT 1'
-                );
-                if (admins && admins.length > 0) {
-                    updated_by = admins[0].NhanVienID;
-                } else {
-                    throw new Error('Không tìm thấy thông tin admin trong hệ thống');
-                }
-            }
-    
-            // Update database - thông tin phòng
-            await db.execute(
-                `UPDATE Phong 
-                 SET IDTinhTrang = ?, IDLoai = ?, Gia = ?, updated_by = ? 
-                 WHERE PhongID = ?`,
-                [IDTinhTrang, IDLoai, Gia, updated_by, roomId]
-            );
-    
-            // Xóa ảnh nếu có yêu cầu
-            if (deleteImageIds && deleteImageIds.length > 0) {
-                let imageIdsArray = Array.isArray(deleteImageIds) ? deleteImageIds : [deleteImageIds];
-                
-                // Lấy đường dẫn của ảnh trước khi xóa
-                const [imagesToDelete] = await db.execute(
-                    `SELECT * FROM AnhPhong WHERE AnhPhongID IN (?)`,
-                    [imageIdsArray]
-                );
-                
-                // Xóa file ảnh
-                for (const image of imagesToDelete) {
-                    try {
-                        const filePath = path.join(__dirname, '../../public', image.DuongDan.replace('/public', ''));
-                        if (await fs.access(filePath).then(() => true).catch(() => false)) {
-                            await fs.unlink(filePath);
-                        }
-                    } catch (err) {
-                        console.error('Lỗi khi xóa ảnh:', err);
-                    }
-                }
-                
-                // Xóa bản ghi trong database
-                await db.execute(
-                    `DELETE FROM AnhPhong WHERE AnhPhongID IN (?)`,
-                    [imageIdsArray]
-                );
-            }
-    
-            // Thêm ảnh mới nếu có
-            if (req.files) {
-                let roomImages = [];
-                
-                if (req.files.imagePhong) {
-                    if (Array.isArray(req.files.imagePhong)) {
-                        roomImages = req.files.imagePhong;
-                    } else {
-                        roomImages = [req.files.imagePhong];
-                    }
-                    
-                    const uploadDir = path.join(__dirname, '../../public/uploads/rooms');
-                    
-                    // Create upload directory if it doesn't exist
-                    try {
-                        await fs.mkdir(uploadDir, { recursive: true });
-                    } catch (err) {
-                        console.error('Lỗi khi tạo thư mục upload:', err);
-                    }
-                    
-                    // Xử lý từng ảnh và lưu vào database
-                    for (const image of roomImages) {
-                        const fileName = `room_${roomId}_${Date.now()}_${Math.floor(Math.random() * 1000)}${path.extname(image.name)}`;
-                        const filePath = path.join(uploadDir, fileName);
-                        uploadedFilePaths.push(filePath);
-                        
-                        await image.mv(filePath);
-                        const imagePath = `/public/uploads/rooms/${fileName}`;
-                        
-                        // Insert image path into AnhPhong table
-                        await db.execute(
-                            `INSERT INTO AnhPhong (PhongID, DuongDan)
-                             VALUES (?, ?)`,
-                            [roomId, imagePath]
-                        );
-                    }
-                }
-            }
-    
-            // Lấy tất cả ảnh sau khi cập nhật
-            const [images] = await db.execute(
-                `SELECT * FROM AnhPhong WHERE PhongID = ? ORDER BY AnhPhongID ASC`,
-                [roomId]
-            );
-    
-            return res.json({
-                success: true,
-                message: 'Cập nhật phòng thành công',
-                data: {
-                    PhongID: roomId,
-                    IDTinhTrang,
-                    IDLoai,
-                    Gia,
-                    updated_by,
-                    images: images
-                }
-            });
-    
-        } catch (error) {
-            // Clean up uploaded files if there was an error
-            for (const filePath of uploadedFilePaths) {
-                try {
-                    await fs.unlink(filePath);
-                } catch (unlinkError) {
-                    console.error('Lỗi khi xóa file tạm:', unlinkError);
-                }
-            }
-    
-            console.error('Lỗi khi cập nhật phòng:', error);
-            return res.status(500).json({
-                success: false,
-                message: 'Đã có lỗi xảy ra khi cập nhật phòng',
-                error: error.message
-            });
-        }
-    }
+   
     static async getListRooms(req, res) {
         try {
             const { roomType, status, minPrice, maxPrice } = req.query;
@@ -410,6 +246,113 @@ class PhongAdminController {
             return res.status(500).json({
                 success: false,
                 message: 'Đã có lỗi xảy ra khi lấy thông tin phòng',
+                error: error.message
+            });
+        }
+    }
+    static async updateRoom(req, res) {
+        const roomId = req.params.id;
+        const { IDTinhTrang, IDLoai, Gia } = req.body;
+        
+        try {
+            // Validate input
+            if (!IDTinhTrang || !IDLoai || !Gia) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Vui lòng điền đầy đủ thông tin bắt buộc'
+                });
+            }
+    
+            // Validate price
+            if (isNaN(Gia) || Gia <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Giá phòng không hợp lệ'
+                });
+            }
+    
+            // Get updater info from session
+            let updated_by;
+            if (req.session && req.session.admin && req.session.admin.NhanVienID) {
+                updated_by = req.session.admin.NhanVienID;
+            } else {
+                const [admins] = await db.execute(
+                    'SELECT NhanVienID FROM NhanVien WHERE RoleID = 1 LIMIT 1'
+                );
+                if (admins && admins.length > 0) {
+                    updated_by = admins[0].NhanVienID;
+                } else {
+                    throw new Error('Không tìm thấy thông tin admin trong hệ thống');
+                }
+            }
+    
+            // Update room in database
+            await db.execute(
+                `UPDATE Phong 
+                 SET IDTinhTrang = ?, IDLoai = ?, Gia = ?, updated_by = ?
+                 WHERE PhongID = ?`,
+                [IDTinhTrang, IDLoai, Gia, updated_by, roomId]
+            );
+    
+            // Handle image uploads if present
+            if (req.files && req.files.imagePhong) {
+                const uploadDir = path.join(__dirname, '../../public/uploads/rooms');
+                
+                try {
+                    await fs.mkdir(uploadDir, { recursive: true });
+                } catch (err) {
+                    console.error('Lỗi khi tạo thư mục upload:', err);
+                }
+    
+                let roomImages = Array.isArray(req.files.imagePhong) ? 
+                    req.files.imagePhong : [req.files.imagePhong];
+                
+                for (const image of roomImages) {
+                    const fileName = `room_${roomId}_${Date.now()}_${Math.floor(Math.random() * 1000)}${path.extname(image.name)}`;
+                    const filePath = path.join(uploadDir, fileName);
+                    
+                    await image.mv(filePath);
+                    const imagePath = `/public/uploads/rooms/${fileName}`;
+                    
+                    await db.execute(
+                        `INSERT INTO AnhPhong (PhongID, DuongDan)
+                         VALUES (?, ?)`,
+                        [roomId, imagePath]
+                    );
+                }
+            }
+    
+            // Fetch updated room data
+            const [updatedRoom] = await db.execute(
+                `SELECT p.*, lp.TenLoai, ttp.TenTinhTrang, nv.Ten as TenNhanVien
+                 FROM Phong p
+                 LEFT JOIN LoaiPhong lp ON p.IDLoai = lp.IDLoai
+                 LEFT JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
+                 LEFT JOIN NhanVien nv ON p.updated_by = nv.NhanVienID
+                 WHERE p.PhongID = ?`,
+                [roomId]
+            );
+    
+            // Fetch room images
+            const [images] = await db.execute(
+                `SELECT * FROM AnhPhong WHERE PhongID = ? ORDER BY AnhPhongID ASC`,
+                [roomId]
+            );
+    
+            return res.json({
+                success: true,
+                message: 'Cập nhật phòng thành công',
+                data: {
+                    ...updatedRoom[0],
+                    images: images
+                }
+            });
+    
+        } catch (error) {
+            console.error('Lỗi khi cập nhật phòng:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Đã có lỗi xảy ra khi cập nhật phòng',
                 error: error.message
             });
         }
