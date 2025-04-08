@@ -1,15 +1,34 @@
 // src/middleware/authMiddleware.js
 
-const checkUserAuth = (req, res, next) => {
-    if (!req.session.user) {
+const checkUserAuth = async (req, res, next) => {
+    try {
+        // Kiểm tra cả session và token từ header
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!req.session.user && !token) {
+            return res.status(401).json({
+                isAuthenticated: false,
+                message: 'Vui lòng đăng nhập'
+            });
+        }
+        
+        // Nếu có token, kiểm tra token
+        if (token) {
+            const decoded = verifyToken(token); // Hàm verifyToken cần được implement
+            req.user = decoded;
+        } else {
+            req.user = req.session.user;
+        }
+        
+        next();
+    } catch (error) {
+        console.error('Auth error:', error);
         return res.status(401).json({
             isAuthenticated: false,
-            message: 'Vui lòng đăng nhập',
-            redirectUrl: '/LoginUser/LoginUser.html'
+            message: 'Phiên đăng nhập không hợp lệ'
         });
     }
-    next();
-  };
+};
   
   const checkAdminAuth = (req, res, next) => {
     if (!req.session.admin || !req.session.admin.isLoggedIn) {

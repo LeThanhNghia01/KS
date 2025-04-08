@@ -111,7 +111,6 @@ const PhongUserManager = {
                 const roomId = bookNowBtn.getAttribute('data-room-id');
                 if (roomId) {
                     try {
-                        // Use the correct endpoint that actually exists
                         const response = await fetch('/api/user/check-auth');
                         const data = await response.json();
                         
@@ -119,13 +118,12 @@ const PhongUserManager = {
                             window.location.href = `/DatPhong/datPhong.html?phongId=${roomId}`;
                         } else {
                             alert('Vui lòng đăng nhập để đặt phòng');
-                            window.location.href = '/LoginUser/LoginUser.html?redirect=' + encodeURIComponent(`/DatPhong/datPhong.html?phongId=${roomId}`);
+                            window.location.href = `/LoginUser/LoginUser.html?redirect=${encodeURIComponent(`/DatPhong/datPhong.html?phongId=${roomId}`)}`;
                         }
                     } catch (error) {
-                        console.error("Error checking auth status:", error);
-                        // Nếu có lỗi trong quá trình kiểm tra, hiển thị thông báo lỗi
+                        console.error("Error checking auth:", error);
                         alert('Vui lòng đăng nhập để đặt phòng');
-                        window.location.href = '/LoginUser/LoginUser.html?redirect=' + encodeURIComponent(`/DatPhong/datPhong.html?phongId=${roomId}`);
+                        window.location.href = `/LoginUser/LoginUser.html?redirect=${encodeURIComponent(`/DatPhong/datPhong.html?phongId=${roomId}`)}`;
                     }
                 }
             });
