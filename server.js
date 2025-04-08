@@ -158,7 +158,7 @@ app.use('/:folder/:file', (req, res, next) => {
         if (req.path.includes('Admin')) {
             return res.redirect('/LoginAdmin/LoginAdmin.html');
         }
-        return res.redirect('/LoginAdmin/LoginAdmin.html');
+        return res.redirect('/LoginUser/LoginUser.html');
     }
     next();
 });

@@ -69,12 +69,13 @@ const profileUserController = {
                 return res.status(401).json({message: 'Vui lòng đăng nhập lại'});
             }
             
-            console.log('Dữ liệu nhận được:', req.body);
+            console.log('Headers:', req.headers);
+            console.log('Body data received:', req.body);
             
-            // Lấy dữ liệu từ form
+            // Get data from request body
             let { ten, soDienThoai, diaChi, anhDaiDienCu } = req.body;
             
-            // Nếu dữ liệu bị thiếu, lấy từ database
+            // If data is missing, get from database
             if (!ten || ten.trim() === '') {
                 const [userData] = await db.query(
                     'SELECT TenNguoiDung FROM NguoiDung WHERE NguoiDungID = ?',
@@ -88,23 +89,23 @@ const profileUserController = {
                 }
             }
             
-            // Chuẩn bị dữ liệu cập nhật
+            // Prepare update data
             let imageUpdateQuery = '';
-            let queryParams = [ten, soDienThoai || '', diaChi || ''];
+            let queryParams = [ten, soDienThoai || null, diaChi || null];
             
-            // Xử lý ảnh đại diện
+            // Handle profile image if exists
             if (req.file) {
                 const imageUrl = `/uploads/users/${req.file.filename}`;
                 imageUpdateQuery = ', AnhDaiDien = ?';
                 queryParams.push(imageUrl);
                 
-                // Lấy ảnh cũ để xóa nếu có
+                // Get old image to delete if exists
                 const [oldImage] = await db.query(
                     'SELECT AnhDaiDien FROM NguoiDung WHERE NguoiDungID = ?',
                     [req.session.user.id]
                 );
                 
-                // Xóa ảnh cũ nếu tồn tại và không phải ảnh từ Google
+                // Delete old image if exists and isn't from Google
                 if (oldImage.length > 0 && oldImage[0].AnhDaiDien && !oldImage[0].AnhDaiDien.startsWith('http')) {
                     const oldImagePath = path.join(__dirname, '../../public', oldImage[0].AnhDaiDien);
                     if (fs.existsSync(oldImagePath)) {
@@ -113,12 +114,12 @@ const profileUserController = {
                 }
             }
             
-            // Thêm ID người dùng vào tham số
+            // Add user ID to parameters
             queryParams.push(req.session.user.id);
             
-            console.log('Tham số truy vấn SQL:', queryParams);
+            console.log('Final SQL query parameters:', queryParams);
             
-            await db.query(
+            const [result] = await db.query(
                 `UPDATE NguoiDung SET 
                 TenNguoiDung = ?, 
                 SoDienThoai = ?, 
@@ -128,9 +129,20 @@ const profileUserController = {
                 queryParams
             );
             
-            res.json({message: 'Cập nhật thông tin thành công'});
+            console.log('Update result:', result);
+            
+            // Check if update was successful
+            if (result.affectedRows > 0) {
+                res.json({
+                    message: 'Cập nhật thông tin thành công',
+                    affectedRows: result.affectedRows,
+                    changedRows: result.changedRows
+                });
+            } else {
+                res.status(400).json({message: 'Không tìm thấy người dùng để cập nhật'});
+            }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Chi tiết lỗi:', error);
             res.status(500).json({message: 'Lỗi server: ' + error.message});
         }
     },

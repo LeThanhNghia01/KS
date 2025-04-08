@@ -99,64 +99,54 @@ function setupEditButtons() {
         loadProfileData();
     });
     
-// Save button event
-saveBtn.addEventListener('click', async () => {
-    try {
-        const formData = new FormData();
-        
-        // Thu thập giá trị từ các trường nhập liệu hiện có
-        const tenValue = document.getElementById('ten').value;
-        const soDienThoaiValue = document.getElementById('soDienThoai').value;
-        const diaChiValue = document.getElementById('diaChi').value;
-        const anhDaiDienValue = document.getElementById('anhdaidien').value;
-        
-        // Thêm dữ liệu vào FormData, bao gồm cả dữ liệu hiện tại nếu không thay đổi
-        formData.append('ten', tenValue);
-        formData.append('soDienThoai', soDienThoaiValue);
-        formData.append('diaChi', diaChiValue);
-        formData.append('anhDaiDienCu', anhDaiDienValue); // Gửi URL ảnh hiện tại để dự phòng
-        
-        // Thêm file nếu đã chọn
-        if (fileInput && fileInput.files.length > 0) {
-            formData.append('anhDaiDien', fileInput.files[0]);
+    // Save button event
+    saveBtn.addEventListener('click', async () => {
+        try {
+            // Create an object with the form data instead of FormData
+            const profileData = {
+                ten: document.getElementById('ten').value,
+                soDienThoai: document.getElementById('soDienThoai').value,
+                diaChi: document.getElementById('diaChi').value,
+                anhDaiDienCu: document.getElementById('anhdaidien').value
+            };
+            
+            console.log('Sending data to server:', profileData);
+            
+            // Use JSON instead of FormData for text fields
+            const response = await fetch('/api/profileUser/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(profileData),
+                credentials: 'include'
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('Cập nhật thông tin thành công');
+                
+                // Switch back to view mode
+                inputs.forEach(input => input.readOnly = true);
+                if (fileInput) fileInput.style.display = 'none';
+                
+                editBtn.style.display = 'inline-block';
+                saveBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                
+                // Show password field again
+                passwordField.style.display = 'block';
+                document.querySelector('label[for="matKhau"]').style.display = 'block';
+                
+                // Reload profile data
+                loadProfileData();
+            } else {
+                alert(data.message || 'Cập nhật thất bại');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi cập nhật thông tin');
         }
-        
-        // Debug: Hiển thị dữ liệu trước khi gửi
-        console.log('Tên:', tenValue);
-        console.log('SĐT:', soDienThoaiValue);
-        console.log('Địa chỉ:', diaChiValue);
-        
-        const response = await fetch('/api/profileUser/update', {
-            method: 'POST',
-            body: formData,
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            alert('Cập nhật thông tin thành công');
-            
-            // Trở về chế độ xem
-            inputs.forEach(input => input.readOnly = true);
-            if (fileInput) fileInput.style.display = 'none';
-            
-            editBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-            
-            // Hiển thị lại trường mật khẩu
-            passwordField.style.display = 'block';
-            document.querySelector('label[for="matKhau"]').style.display = 'block';
-            
-            // Tải lại dữ liệu hồ sơ
-            loadProfileData();
-        } else {
-            alert(data.message || 'Cập nhật thất bại');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Có lỗi xảy ra khi cập nhật thông tin');
-    }
-});
+    });
 }

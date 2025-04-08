@@ -9,9 +9,9 @@ router.get('/info', authMiddleware.isLoggedIn, profileUserController.getProfileU
 
 // Update user profile
 router.post('/update', 
-    authMiddleware.isLoggedIn, 
-    profileUserController.uploadMiddleware,
+    authMiddleware.isLoggedIn,
+    express.json(), 
+    profileUserController.uploadMiddleware, 
     profileUserController.updateProfileUser
 );
-
 module.exports = router;
