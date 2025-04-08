@@ -104,20 +104,28 @@ const PhongUserManager = {
             });
         }
         
-        // Sự kiện đặt phòng
+       // Sự kiện đặt phòng
         const bookNowBtn = document.getElementById('bookNowBtn');
         if (bookNowBtn) {
-            bookNowBtn.addEventListener('click', () => {
+            bookNowBtn.addEventListener('click', async () => {
                 const roomId = bookNowBtn.getAttribute('data-room-id');
                 if (roomId) {
-                    // Kiểm tra người dùng đã đăng nhập chưa
-                    const isLoggedIn = localStorage.getItem('user') !== null;
-                    
-                    if (isLoggedIn) {
-                        window.location.href = `/dat-phong?phongId=${roomId}`;
-                    } else {
+                    try {
+                        // Use the correct endpoint that actually exists
+                        const response = await fetch('/api/user/check-auth');
+                        const data = await response.json();
+                        
+                        if (data.isAuthenticated) {
+                            window.location.href = `/Phong/datPhong.html?phongId=${roomId}`;
+                        } else {
+                            alert('Vui lòng đăng nhập để đặt phòng');
+                            window.location.href = '/LoginUser/LoginUser.html?redirect=' + encodeURIComponent(`/Phong/datPhong.html?phongId=${roomId}`);
+                        }
+                    } catch (error) {
+                        console.error("Error checking auth status:", error);
+                        // Nếu có lỗi trong quá trình kiểm tra, hiển thị thông báo lỗi
                         alert('Vui lòng đăng nhập để đặt phòng');
-                        window.location.href = '/dang-nhap?redirect=' + encodeURIComponent(`/dat-phong?phongId=${roomId}`);
+                        window.location.href = '/LoginUser/LoginUser.html?redirect=' + encodeURIComponent(`/Phong/datPhong.html?phongId=${roomId}`);
                     }
                 }
             });

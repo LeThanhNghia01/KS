@@ -232,5 +232,24 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server đang chạy ở port ${PORT}`); // Thông báo server đã khởi động
 });
-
+// Add a unified auth check endpoint
+app.get('/api/auth/check-status', (req, res) => {
+    if (req.session.user) {
+        return res.json({
+            isAuthenticated: true,
+            userType: 'user',
+            user: req.session.user
+        });
+    } else if (req.session.admin) {
+        return res.json({
+            isAuthenticated: true,
+            userType: 'admin',
+            admin: req.session.admin
+        });
+    } else {
+        return res.json({
+            isAuthenticated: false
+        });
+    }
+});
 require('events').EventEmitter.defaultMaxListeners = 15;

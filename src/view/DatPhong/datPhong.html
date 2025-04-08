@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt Phòng - Resort</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../../public/css/headerUser.css">
+    <link rel="stylesheet" href="../../public/css/datPhong.css">
+</head>
+<body>
+    <!-- Header placeholder -->
+    <div id="headerUser-placeholder"></div>
+
+    <!-- Banner Section -->
+    <div class="banner-section py-5 text-center bg-light">
+        <div class="container">
+            <h1 class="display-4">Đặt Phòng</h1>
+            <p class="lead">Hoàn tất thông tin đặt phòng của bạn</p>
+        </div>
+    </div>
+
+    <!-- Booking Form Section -->
+    <div class="container my-5">
+        <div class="row">
+            <!-- Booking Form -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Thông tin đặt phòng</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="bookingForm">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="checkInDate" class="form-label">Ngày nhận phòng <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="checkInDate" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="checkOutDate" class="form-label">Ngày trả phòng <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="checkOutDate" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="numberOfGuests" class="form-label">Số lượng khách</label>
+                                    <input type="number" class="form-control" id="numberOfGuests" min="1" value="2">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="paymentMethod" class="form-label">Phương thức thanh toán</label>
+                                    <select class="form-select" id="paymentMethod">
+                                        <option value="cash">Tiền mặt (Tại quầy)</option>
+                                        <option value="vnpay">VNPay</option>
+                                        <option value="banking">Chuyển khoản ngân hàng</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="specialRequests" class="form-label">Yêu cầu đặc biệt</label>
+                                <textarea class="form-control" id="specialRequests" rows="3" placeholder="Ghi chú thêm về yêu cầu đặc biệt của bạn..."></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Thông tin cá nhân</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="fullName" class="form-label">Họ và tên</label>
+                                <input type="text" class="form-control" id="fullName" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phoneNumber" class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="phoneNumber" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Booking Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Thông tin phòng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="room-info">
+                            <img id="roomImage" src="../../public/images/default-room.jpg" class="img-fluid rounded mb-3" alt="Room image">
+                            <h5 id="roomName" class="mb-2">Đang tải thông tin phòng...</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Loại phòng:</span>
+                                <span id="roomType"></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Giá phòng:</span>
+                                <span id="roomPrice" class="text-primary fw-bold"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Tóm tắt đặt phòng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Ngày nhận phòng:</span>
+                            <span id="summaryCheckIn"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Ngày trả phòng:</span>
+                            <span id="summaryCheckOut"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Số đêm:</span>
+                            <span id="summaryNights"></span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Giá phòng:</span>
+                            <span id="summaryRoomRate"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Thuế và phí:</span>
+                            <span id="summaryTax"></span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2 fw-bold">
+                            <span>Tổng cộng:</span>
+                            <span id="summaryTotal" class="text-primary"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" id="confirmBookingBtn" class="btn btn-primary btn-lg w-100 shadow-sm">Xác nhận đặt phòng</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Confirmation Modal -->
+    <div class="modal fade" id="bookingConfirmModal" tabindex="-1" aria-labelledby="bookingConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookingConfirmModalLabel">Xác nhận đặt phòng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn đặt phòng này không?</p>
+                    <div class="alert alert-info">
+                        <strong>Lưu ý:</strong> Đơn đặt phòng của bạn sẽ được xác nhận khi nhân viên xét duyệt. Vui lòng kiểm tra email và số điện thoại để nhận thông báo.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" id="processBookingBtn" class="btn btn-primary">Xác nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Success Modal -->
+    <div class="modal fade" id="bookingSuccessModal" tabindex="-1" aria-labelledby="bookingSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookingSuccessModalLabel">Đặt phòng thành công</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
+                    <h4>Cảm ơn bạn đã đặt phòng!</h4>
+                    <p>Mã đặt phòng của bạn là: <strong id="bookingCode"></strong></p>
+                    <p>Chúng tôi đã gửi email xác nhận đến địa chỉ email của bạn.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <a href="/lich-su-dat-phong" class="btn btn-primary">Xem lịch sử đặt phòng</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Đặt các script này ở cuối body -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../public/js/layouts/headerUser.js"></script>
+    <script src="../../public/js/DatPhong/datPhongManager.js"></script>
+    <script>
+        // Khởi tạo sau khi tất cả script đã load
+        document.addEventListener('DOMContentLoaded', () => {
+            DatPhongManager.init();
+        });
+    </script>
+</body>
+</html>
