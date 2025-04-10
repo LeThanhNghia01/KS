@@ -11,10 +11,9 @@ const checkUserAuth = async (req, res, next) => {
                 message: 'Vui lòng đăng nhập'
             });
         }
-        
         // Nếu có token, kiểm tra token
         if (token) {
-            const decoded = verifyToken(token); // Hàm verifyToken cần được implement
+            const decoded = verifyToken(token); 
             req.user = decoded;
         } else {
             req.user = req.session.user;

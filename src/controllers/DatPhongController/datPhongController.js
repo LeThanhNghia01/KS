@@ -53,7 +53,7 @@ class DatPhongController {
                     success: false,
                     message: 'Phòng không khả dụng trong khoảng thời gian này'
                 });
-            }
+            } 
             
             // Tạo mã đặt phòng
             const MaDatPhong = `DP-${uuidv4().substring(0, 8).toUpperCase()}`;
