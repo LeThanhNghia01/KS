@@ -57,6 +57,7 @@ const tinhTrangPhongRoutes=require('./src/controllers/TinhTrangPhongController/t
 const tienNghiPhongRoutes=require('./src/controllers/TienNghiPhongController/tienNghiPhongRoutes')
 const phongAdminRoutes = require('./src/controllers/PhongAdminController/PhongAdminRoutes');
 const phongUserRoutes = require('./src/controllers/PhongUserController/phongUserRoutes');
+const datPhongRoutes = require('./src/controllers/DatPhongController/datPhongRoutes');
 // ===== Các route công khai =====
 // Route xác thực
 app.post('/api/user/register', loginUserController.register); // Đăng ký người dùng
@@ -64,6 +65,7 @@ app.post('/api/user/login', loginUserController.login); // Đăng nhập ngườ
 app.post('/api/user/google-login', loginUserController.googleLogin); // Đăng nhập bằng Google
 app.get('/api/user/check-auth', loginUserController.checkAuth); // Kiểm tra xác thực
 app.use('/api/phong', phongUserRoutes);
+app.use('/api/dat-phong', datPhongRoutes);
 // Routes cho User - những route user cần xác thực
 app.use('/api/user/profile', checkUserAuth);
 app.use('/api/user/bookings', checkUserAuth);

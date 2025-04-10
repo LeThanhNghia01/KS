@@ -312,7 +312,15 @@ const DatPhongManager = {
                 GhiChu: specialRequests,
                 PhuongThucThanhToan: paymentMethod
             };
-            
+            // Kiểm tra xem có token không trước khi gửi request
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                window.location.href = `/LoginUser/LoginUser.html?redirect=${encodeURIComponent(window.location.href)}`;
+                return;
+            }
+
+            console.log('Sending booking request with data:', bookingData);
             // Gửi request đặt phòng
             const response = await fetch('/api/dat-phong', {
                 method: 'POST',
