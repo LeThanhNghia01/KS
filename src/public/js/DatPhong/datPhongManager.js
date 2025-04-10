@@ -5,90 +5,41 @@ const DatPhongManager = {
     
       // Khởi tạo
       async init() {
-        // Lấy ID phòng từ URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const phongId = urlParams.get('phongId');
-    
-        if (!phongId) {
-            alert('Không tìm thấy thông tin phòng');
-            window.location.href = '/roomUser.html';
-            return;
-        }
-      // Gọi API để kiểm tra xác thực
-      try {
-            console.log('Checking authentication...');
-            const token = localStorage.getItem('token');
-            console.log('Token exists:', !!token);
-            
+        try {
+            // Kiểm tra xác thực
             const response = await fetch('/api/user/check-auth', {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                }
+                credentials: 'include'
             });
-            
-            console.log('Trạng thái phản hồi xác thực:', response.status);
-            
-            if (!response.ok) {
-                throw new Error(`Lỗi xác thực người dùng: ${response.status}`);
-            }
-            
+    
             const authData = await response.json();
-            console.log('Auth data received:', authData);
-            
-            if (!authData.isAuthenticated || !authData.user) {
-                // Thử đọc dữ liệu từ localStorage nếu có
-                const localUserStr = localStorage.getItem('user');
-                if (localUserStr) {
-                    try {
-                        this.userData = JSON.parse(localUserStr);
-                        console.log('Sử dụng dữ liệu người dùng từ localStorage:', this.userData);
-                        this.fillUserInfo();
-                    } catch (e) {
-                        console.error('Lỗi khi phân tích dữ liệu người dùng cục bộ:', e);
-                        alert('Vui lòng đăng nhập để đặt phòng');
-                        window.location.href = `/LoginUser/LoginUser.html?redirect=${encodeURIComponent(window.location.href)}`;
-                        return;
-                    }
-                } else {
-                    alert('Vui lòng đăng nhập để đặt phòng');
-                    window.location.href = `/LoginUser/LoginUser.html?redirect=${encodeURIComponent(window.location.href)}`;
-                    return;
-                }
-            } else {
-                // Lưu thông tin người dùng
-                this.userData = authData.user;
-                console.log('Sử dụng dữ liệu người dùng từ API:', this.userData);
-                
-                // Điền thông tin người dùng vào form
-                this.fillUserInfo();
+    
+            if (!authData.isAuthenticated) {
+                const currentUrl = encodeURIComponent(window.location.href);
+                window.location.href = `/LoginUser/LoginUser.html?redirect=${currentUrl}`;
+                return;
             }
-            // Tiếp tục các bước khác
-            this.loadRoomInfo(phongId);
+    
+            // Lưu thông tin người dùng
+            this.userData = authData.user;
+            
+            // Tiếp tục khởi tạo
+            const urlParams = new URLSearchParams(window.location.search);
+            const phongId = urlParams.get('phongId');
+    
+            if (!phongId) {
+                alert('Không tìm thấy thông tin phòng');
+                window.location.href = '/Phong/roomUserManager.html';
+                return;
+            }
+    
+            await this.loadRoomInfo(phongId);
             this.setupEventListeners();
             this.setupDefaultDates();
-            
+            this.fillUserInfo();
+    
         } catch (error) {
-            console.error('Lỗi khi kiểm tra xác thực:', error);
-            
-            // Thử sử dụng dữ liệu từ localStorage nếu API gặp lỗi
-            const localUserStr = localStorage.getItem('user');
-            if (localUserStr) {
-                try {
-                    this.userData = JSON.parse(localUserStr);
-                    console.log('Sử dụng dữ liệu người dùng từ localStorage làm phương án dự phòng:', this.userData);
-                    this.fillUserInfo();
-                    
-                    this.loadRoomInfo(phongId);
-                    this.setupEventListeners();
-                    this.setupDefaultDates();
-                    return;
-                } catch (e) {
-                    console.error('Lỗi khi phân tích dữ liệu người dùng cục bộ:', e);
-                }
-            }
-            
+            console.error('Error initializing booking manager:', error);
             alert('Đã xảy ra lỗi, vui lòng thử lại sau');
         }
     }
@@ -189,10 +140,18 @@ const DatPhongManager = {
         const priceFormatted = new Intl.NumberFormat('vi-VN').format(Gia);
         document.getElementById('roomPrice').textContent = `${priceFormatted}đ / đêm`;
         
-        // Hiển thị ảnh đầu tiên nếu có
+        // Hiển thị ảnh với fallback mặc định
+        const imgElement = document.getElementById('roomImage');
         if (anhPhong && anhPhong.length > 0) {
-            document.getElementById('roomImage').src = anhPhong[0];
+            imgElement.src = anhPhong[0];
+        } else {
+            imgElement.src = '/public/images/default-room.jpg';
         }
+        
+        // Xử lý lỗi tải ảnh
+        imgElement.onerror = function() {
+            this.src = '/public/images/default-room.jpg';
+        };
     },
     
     // Thiết lập các sự kiện
@@ -290,72 +249,141 @@ const DatPhongManager = {
         const totalFormatted = new Intl.NumberFormat('vi-VN').format(total);
         document.getElementById('summaryTotal').textContent = `${totalFormatted}đ`;
     },
-    
+    async fetchUserDetails() {
+        try {
+            // Kiểm tra session trước
+            const authResponse = await fetch('/api/user/check-auth', {
+                credentials: 'include'
+            });
+            const authData = await authResponse.json();
+
+            if (!authData.isAuthenticated) {
+                throw new Error('Vui lòng đăng nhập để tiếp tục');
+            }
+
+            // Lấy thông tin chi tiết người dùng
+            const response = await fetch('/api/user/profile', {
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Không thể lấy thông tin người dùng');
+            }
+
+            const userData = await response.json();
+            console.log('User profile response:', userData);
+
+            if (!userData.success || !userData.data) {
+                throw new Error('Dữ liệu người dùng không hợp lệ');
+            }
+
+            return userData.data;
+
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+            throw new Error('Không thể lấy thông tin người dùng. Vui lòng đăng nhập lại.');
+        }
+    },
     // Xử lý đặt phòng
     async processBooking() {
         try {
-            // Lấy thông tin đặt phòng
+            const processBookingBtn = document.getElementById('processBookingBtn');
+            processBookingBtn.disabled = true;
+            processBookingBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+
+            // Lấy thông tin người dùng
+            const userData = await this.fetchUserDetails();
+            console.log('User data:', userData);
+
+            if (!userData || !userData.NguoiDungID) {
+                throw new Error('Vui lòng đăng nhập lại để tiếp tục đặt phòng');
+            }
+
+            // Get form data
             const phongId = new URLSearchParams(window.location.search).get('phongId');
             const checkInDate = document.getElementById('checkInDate').value;
             const checkOutDate = document.getElementById('checkOutDate').value;
             const numberOfGuests = document.getElementById('numberOfGuests').value;
             const specialRequests = document.getElementById('specialRequests').value;
             const paymentMethod = document.getElementById('paymentMethod').value;
-            
-            // Tạo dữ liệu gửi đi
-            const bookingData = {
-                NguoiDungID: this.userData.NguoiDungID,
-                PhongID: phongId,
-                NgayNhanPhong: checkInDate,
-                NgayTraPhong: checkOutDate,
-                SoNguoi: numberOfGuests,
-                GhiChu: specialRequests,
-                PhuongThucThanhToan: paymentMethod
-            };
-            // Kiểm tra xem có token không trước khi gửi request
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-                window.location.href = `/LoginUser/LoginUser.html?redirect=${encodeURIComponent(window.location.href)}`;
-                return;
+
+            // Validate dates
+            if (!this.validateDates(checkInDate, checkOutDate)) {
+                throw new Error('Ngày check-in và check-out không hợp lệ');
             }
 
-            console.log('Sending booking request with data:', bookingData);
-            // Gửi request đặt phòng
+            // Prepare booking data
+            const bookingData = {
+                NguoiDungID: userData.NguoiDungID,
+                PhongID: parseInt(phongId),
+                NgayNhanPhong: checkInDate,
+                NgayTraPhong: checkOutDate,
+                SoNguoi: parseInt(numberOfGuests),
+                GhiChu: specialRequests || '',
+                PhuongThucThanhToan: paymentMethod
+            };
+
+            console.log('Sending booking data:', bookingData);
+
+            // Send booking request
             const response = await fetch('/api/dat-phong', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(bookingData)
             });
-            
+
             const result = await response.json();
-            
-            // Đóng modal xác nhận
-            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('bookingConfirmModal'));
-            confirmModal.hide();
-            
-            if (result.success) {
-                // Hiển thị modal thành công
-                document.getElementById('bookingCode').textContent = result.data.MaDatPhong;
-                const successModal = new bootstrap.Modal(document.getElementById('bookingSuccessModal'));
-                successModal.show();
-                
-                // Xử lý thanh toán nếu là VNPay
-                if (paymentMethod === 'vnpay' && result.data.paymentUrl) {
-                    // Redirect đến trang thanh toán VNPay sau khi đóng modal
-                    document.getElementById('bookingSuccessModal').addEventListener('hidden.bs.modal', () => {
-                        window.location.href = result.data.paymentUrl;
-                    });
-                }
-            } else {
-                alert(`Đặt phòng thất bại: ${result.message}`);
+            if (!response.ok) {
+                throw new Error(result.message || 'Đặt phòng thất bại');
             }
+
+            // Xử lý kết quả thành công
+            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('bookingConfirmModal'));
+            if (confirmModal) {
+                confirmModal.hide();
+            }
+
+            document.getElementById('bookingCode').textContent = result.data.MaDatPhong;
+            const successModal = new bootstrap.Modal(document.getElementById('bookingSuccessModal'));
+            successModal.show();
+
+            if (paymentMethod === 'vnpay' && result.data.paymentUrl) {
+                document.getElementById('bookingSuccessModal').addEventListener('hidden.bs.modal', () => {
+                    window.location.href = result.data.paymentUrl;
+                });
+            }
+
         } catch (error) {
             console.error('Error processing booking:', error);
-            alert('Đã có lỗi xảy ra khi xử lý đặt phòng. Vui lòng thử lại sau.');
+            alert(error.message);
+        } finally {
+            const processBookingBtn = document.getElementById('processBookingBtn');
+            if (processBookingBtn) {
+                processBookingBtn.disabled = false;
+                processBookingBtn.innerHTML = 'Xác nhận';
+            }
         }
+    },
+
+    // Thêm phương thức mới để lấy ID người dùng
+    getUserId() {
+        if (!this.userData) return null;
+        
+        console.log('Getting user ID from:', this.userData); // Debug log
+        
+        // First try direct access to NguoiDungID
+        if (this.userData.NguoiDungID) {
+            return this.userData.NguoiDungID;
+        }
+        
+        // Then try nested data object if it exists
+        if (this.userData.data && this.userData.data.NguoiDungID) {
+            return this.userData.data.NguoiDungID;
+        }
+        
+        return null;
     }
 };

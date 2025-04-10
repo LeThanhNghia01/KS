@@ -7,6 +7,9 @@ class DatPhongController {
     // Tạo đơn đặt phòng
     async createBooking(req, res) {
         try {
+            // Log request body
+            console.log('Request body:', req.body);
+            
             const { 
                 NguoiDungID, 
                 PhongID, 
@@ -17,11 +20,25 @@ class DatPhongController {
                 PhuongThucThanhToan 
             } = req.body;
             
-            // Kiểm tra thông tin bắt buộc
-            if (!NguoiDungID || !PhongID || !NgayNhanPhong || !NgayTraPhong) {
+            // Kiểm tra chi tiết từng trường
+            if (!NguoiDungID) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Thiếu thông tin bắt buộc'
+                    message: 'Thiếu thông tin người dùng'
+                });
+            }
+            
+            if (!PhongID) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Thiếu thông tin phòng'
+                });
+            }
+            
+            if (!NgayNhanPhong || !NgayTraPhong) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Thiếu thông tin ngày nhận/trả phòng'
                 });
             }
             
@@ -83,15 +100,24 @@ class DatPhongController {
             // Xác định trạng thái thanh toán ban đầu
             const trangThaiThanhToan = 'unpaid';
             
+            // Tính tiền cọc
+            const TienCoc = TongTien * 0.3; // Đặt cọc 30% tổng tiền
+            
             // Bắt đầu transaction
             await db.query('START TRANSACTION');
             
             // Tạo đơn đặt phòng
             const [result] = await db.query(
-                `INSERT INTO DatPhong 
-                (NguoiDungID, PhongID, NgayNhanPhong, NgayTraPhong, SoNguoi, GhiChu, MaDatPhong, TrangThaiThanhToan, PhuongThucThanhToan, TongTien, TrangThai) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [NguoiDungID, PhongID, NgayNhanPhong, NgayTraPhong, SoNguoi, GhiChu, MaDatPhong, trangThaiThanhToan, PhuongThucThanhToan, TongTien, 'pending']
+                `INSERT INTO DatPhong (
+                    NguoiDungID, PhongID, NgayNhanPhong, NgayTraPhong, 
+                    SoNguoi, GhiChu, MaDatPhong, TrangThaiThanhToan,
+                    PhuongThucThanhToan, TongTien, TienCoc, TrangThai
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    NguoiDungID, PhongID, NgayNhanPhong, NgayTraPhong,
+                    SoNguoi, GhiChu, MaDatPhong, trangThaiThanhToan,
+                    PhuongThucThanhToan, TongTien, TienCoc, 'pending'
+                ]
             );
             
             if (!result || result.affectedRows === 0) {
@@ -103,7 +129,11 @@ class DatPhongController {
             }
             
             const bookingId = result.insertId;
-            
+            // Cập nhật trạng thái phòng thành "Đã đặt"
+            await db.query(
+                'UPDATE Phong SET IDTinhTrang = (SELECT IDTinhTrang FROM TinhTrangPhong WHERE TenTinhTrang = "Đã đặt") WHERE PhongID = ?',
+                [PhongID]
+            );
             // Commit transaction
             await db.query('COMMIT');
             
@@ -125,7 +155,7 @@ class DatPhongController {
                 });
             }
             
-            // Xử lý thanh toán VNPay nếu được chọn
+           // Xử lý thanh toán VNPay nếu được chọn
             let paymentUrl = null;
             if (PhuongThucThanhToan === 'vnpay') {
                 paymentUrl = await this.createVNPayPaymentUrl(
@@ -134,6 +164,14 @@ class DatPhongController {
                     TongTien,
                     `Thanh toán đặt phòng ${phong[0].TenLoai}`
                 );
+                
+                if (paymentUrl) {
+                    // Lưu OrderVnPayID
+                    await db.query(
+                        'UPDATE DatPhong SET OrderVnPayID = ? WHERE DatPhongID = ?',
+                        [Date.now(), bookingId]
+                    );
+                }
             }
             
             return res.status(201).json({
@@ -169,13 +207,14 @@ class DatPhongController {
         try {
             // Kiểm tra trạng thái phòng có phải "Trống" không
             const [roomStatus] = await db.query(
-                `SELECT tp.TenTinhTrang FROM Phong p
-                JOIN TinhTrangPhong tp ON p.TinhTrangID = tp.TinhTrangID
-                WHERE p.PhongID = ?`,
+                `SELECT ttp.TenTinhTrang 
+                FROM Phong p
+                JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
+                WHERE p.PhongID = ? AND p.is_deleted = FALSE`,
                 [PhongID]
             );
             
-            if (roomStatus.length === 0 || roomStatus[0].TenTinhTrang !== 'Trống') {
+            if (!roomStatus.length || roomStatus[0].TenTinhTrang !== 'Trống') {
                 return false;
             }
             

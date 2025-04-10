@@ -38,32 +38,43 @@ const upload = multer({
     }
 });
 
-const profileUserController = {
-    getProfileUserInfo: async(req, res) => {
+class ProfileUserController {
+    static async getProfileUserInfo(req, res) {
         try {
             if (!req.session.user) {
-                return res.status(401).json({message: 'Vui lòng đăng nhập lại'});
+                return res.status(401).json({
+                    success: false,
+                    message: 'Vui lòng đăng nhập lại'
+                });
             }
-            
-            const [nguoidung] = await db.query(
-                `SELECT NguoiDungID, TenNguoiDung as Ten, DiaChi, SoDienThoai, Email, MatKhau, AnhDaiDien 
-                FROM NguoiDung 
-                WHERE NguoiDungID = ? AND is_deleted = FALSE`,
-                [req.session.user.id]
+
+            const userId = req.session.user.NguoiDungID;
+            const [userData] = await db.execute(
+                'SELECT NguoiDungID, TenNguoiDung, Email, SoDienThoai, DiaChi FROM NguoiDung WHERE NguoiDungID = ?',
+                [userId]
             );
-            
-            if (nguoidung.length === 0) {
-                return res.status(404).json({message: 'Không tìm thấy thông tin'});
+
+            if (userData.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Không tìm thấy thông tin người dùng'
+                });
             }
-            
-            res.json(nguoidung[0]);
+
+            res.json({
+                success: true,
+                data: userData[0]
+            });
         } catch (error) {
-            console.error('Error:', error);
-            res.status(500).json({message: 'Lỗi server'});
+            console.error('Error fetching user profile:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Đã xảy ra lỗi khi lấy thông tin người dùng'
+            });
         }
-    },
-    
-    updateProfileUser: async(req, res) => {
+    }
+
+    static async updateProfileUser(req, res) {
         try {
             if (!req.session.user) {
                 return res.status(401).json({message: 'Vui lòng đăng nhập lại'});
@@ -145,10 +156,10 @@ const profileUserController = {
             console.error('Chi tiết lỗi:', error);
             res.status(500).json({message: 'Lỗi server: ' + error.message});
         }
-    },
-    
-    // Middleware for handling the file upload
-    uploadMiddleware: upload.single('anhDaiDien')
-};
+    }
 
-module.exports = profileUserController;
+    // Middleware for handling the file upload
+    static uploadMiddleware = upload.single('anhDaiDien');
+}
+
+module.exports = ProfileUserController;

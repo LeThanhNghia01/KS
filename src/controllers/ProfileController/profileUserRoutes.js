@@ -1,17 +1,10 @@
 //src/routes/ProfileRoutes/profileUserRoutes.js
 const express = require('express');
 const router = express.Router();
-const profileUserController = require('../../controllers/ProfileController/profileUserController');
-const authMiddleware = require('../../middlewares/authMiddleware'); // Assuming you have auth middleware
+const profileUserController = require('./profileUserController');
+const { checkUserAuth } = require('../../middleware/authMiddleware');
+router.use(checkUserAuth);
+router.get('/info', checkUserAuth, profileUserController.getProfileUserInfo);
+router.post('/update', checkUserAuth, profileUserController.updateProfileUser);
 
-// Get user profile information
-router.get('/info', authMiddleware.isLoggedIn, profileUserController.getProfileUserInfo);
-
-// Update user profile
-router.post('/update', 
-    authMiddleware.isLoggedIn,
-    express.json(), 
-    profileUserController.uploadMiddleware, 
-    profileUserController.updateProfileUser
-);
 module.exports = router;

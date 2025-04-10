@@ -4,9 +4,22 @@ const router = express.Router();
 const datPhongController = require('./datPhongController');
 const authMiddleware = require('../../middleware/authMiddleware');
 
-// Áp dụng middleware xác thực cho tất cả các route
-router.use(authMiddleware.checkAuth);
-router.post('/', datPhongController.createBooking);
+router.use(authMiddleware.checkUserAuth);
+
+// Create booking route
+router.post('/', async (req, res) => {
+    try {
+        await datPhongController.createBooking(req, res);
+    } catch (error) {
+        console.error('Error in booking route:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Đã xảy ra lỗi khi xử lý đặt phòng',
+            error: error.message
+        });
+    }
+});
+
 router.get('/user/:userId', datPhongController.getUserBookings);
 router.put('/cancel/:bookingId', datPhongController.cancelBooking);
 

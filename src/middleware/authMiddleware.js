@@ -2,34 +2,25 @@
 
 const checkUserAuth = async (req, res, next) => {
     try {
-        // Kiểm tra cả session và token từ header
-        const token = req.headers.authorization?.split(' ')[1];
-        
-        if (!req.session.user && !token) {
+        if (!req.session.user) {
             return res.status(401).json({
-                isAuthenticated: false,
+                success: false,
                 message: 'Vui lòng đăng nhập'
             });
         }
-        // Nếu có token, kiểm tra token
-        if (token) {
-            const decoded = verifyToken(token); 
-            req.user = decoded;
-        } else {
-            req.user = req.session.user;
-        }
-        
+        // Add user data to req object
+        req.userData = req.session.user;
         next();
     } catch (error) {
         console.error('Auth error:', error);
         return res.status(401).json({
-            isAuthenticated: false,
+            success: false,
             message: 'Phiên đăng nhập không hợp lệ'
         });
     }
 };
   
-  const checkAdminAuth = (req, res, next) => {
+const checkAdminAuth = (req, res, next) => {
     if (!req.session.admin || !req.session.admin.isLoggedIn) {
         return res.status(401).json({
             success: false,
@@ -37,10 +28,34 @@ const checkUserAuth = async (req, res, next) => {
             redirectUrl: '/admin/login'
         });
     }
+    req.userData = { ...req.session.admin, isAdmin: true };
     next();
-  };
+};
   
-  const checkAuth = (req, res, next) => {
+const checkAuth = (req, res, next) => {
+    // For API routes
+    if (req.path.startsWith('/api/')) {
+        if (req.path.includes('/admin')) {
+            if (!req.session.admin || !req.session.admin.isLoggedIn) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Vui lòng đăng nhập'
+                });
+            }
+            req.userData = { ...req.session.admin, isAdmin: true };
+        } else {
+            if (!req.session.user) {
+                return res.status(401).json({
+                    success: false, 
+                    message: 'Vui lòng đăng nhập'
+                });
+            }
+            req.userData = req.session.user;
+        }
+        return next();
+    }
+    
+    // For page routes
     if (req.path.includes('/admin')) {
         if (!req.session.admin || !req.session.admin.isLoggedIn) {
             return res.redirect('/LoginAdmin/LoginAdmin.html');
@@ -51,10 +66,10 @@ const checkUserAuth = async (req, res, next) => {
         }
     }
     next();
-  };
+};
   
-  module.exports = {
+module.exports = {
     checkUserAuth,
     checkAdminAuth,
     checkAuth
-  };
+};
