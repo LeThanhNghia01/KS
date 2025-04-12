@@ -5,19 +5,19 @@ const fs = require('fs').promises;
 
 class PhongAdminController {
     static async createRoom(req, res) {
-        const { IDTinhTrang, IDLoai, Gia } = req.body;
+        const { IDTinhTrang, IDLoai, Gia, SoPhong } = req.body;
         let uploadedFilePaths = [];
 
         try {
             // Validate input
-            if (!IDTinhTrang || !IDLoai || !Gia) {
+            if (!IDTinhTrang || !IDLoai || !Gia || !SoPhong) {
                 return res.status(400).json({
                     success: false,
                     message: 'Vui lòng điền đầy đủ thông tin bắt buộc'
                 });
             }
 
-            // Validate price
+            // Validate giá và số phòng
             if (isNaN(Gia) || Gia <= 0) {
                 return res.status(400).json({
                     success: false,
@@ -25,29 +25,48 @@ class PhongAdminController {
                 });
             }
 
-            // Get creator info from session
-            let created_by;
-            if (req.session && req.session.admin && req.session.admin.NhanVienID) {
+            if (isNaN(SoPhong) || SoPhong <= 0) {
+                return res.status(400).json({ 
+                    success: false,
+                    message: 'Số phòng không hợp lệ'
+                });
+            }
+
+            // Kiểm tra số phòng đã tồn tại chưa
+            const [existingRoom] = await db.execute(
+                'SELECT PhongID FROM Phong WHERE SoPhong = ? AND is_deleted = FALSE',
+                [SoPhong]
+            );
+
+            if (existingRoom.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Số phòng đã tồn tại'
+                });
+            }
+
+            // Lấy thông tin người tạo
+            let created_by; 
+            if (req.session?.admin?.NhanVienID) {
                 created_by = req.session.admin.NhanVienID;
             } else {
-                // Nếu không có session, thử lấy NhanVienID từ database dựa vào role admin
                 const [admins] = await db.execute(
                     'SELECT NhanVienID FROM NhanVien WHERE RoleID = 1 LIMIT 1'
                 );
-                if (admins && admins.length > 0) {
+                if (admins?.length > 0) {
                     created_by = admins[0].NhanVienID;
                 } else {
-                    throw new Error('Không tìm thấy thông tin admin trong hệ thống');
+                    throw new Error('Không tìm thấy thông tin admin');
                 }
             }
 
-            // Insert into database
+            // Insert vào database
             const [result] = await db.execute(
-                `INSERT INTO Phong (IDTinhTrang, IDLoai, Gia, created_by, updated_by)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [IDTinhTrang, IDLoai, Gia, created_by, created_by]
+                `INSERT INTO Phong (IDTinhTrang, IDLoai, Gia, SoPhong, created_by, updated_by) 
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [IDTinhTrang, IDLoai, Gia, SoPhong, created_by, created_by]
             );
-            
+
             const roomId = result.insertId;
             
             // Handle multiple image uploads if present
@@ -104,6 +123,7 @@ class PhongAdminController {
                     IDTinhTrang,
                     IDLoai,
                     Gia,
+                    SoPhong,
                     created_by,
                     images: images
                 }

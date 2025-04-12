@@ -1,22 +1,40 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const cors = require('cors'); // Add this line
 const { checkUserAuth, checkAdminAuth } = require('./src/middleware/authMiddleware');
 const app = express();
 
-// ===== Cấu hình Middleware =====
+// ===== Cấu hình Middleware Cơ bản =====
 app.use(express.json());
-app.use(session({
-    secret: 'hhhhjjjaaaa1hja1', // Khóa bí mật cho phiên làm việc
-    resave: true, // Lưu phiên làm việc ngay cả khi không thay đổi
-    saveUninitialized: true, // Lưu phiên ngay cả khi chưa được khởi tạo
-    cookie: { 
-        secure: process.env.NODE_ENV === 'production',// Không sử dụng bảo mật HTTPS
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // Thời hạn cookie 1 ngày
-        sameSite: 'lax'
-    }
+app.use(cors({
+    origin: 'http://localhost:3000', 
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// ===== Cấu hình Session =====
+app.use(session({
+    secret: 'hhhhjjjaaaa1hja1',
+    resave: false, // Changed to false to avoid unnecessary session saves
+    saveUninitialized: false, // Changed to false for better session handling
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax'
+    },
+    name: 'sessionId' // Custom session name for better security
+}));
+
+// Add this after session configuration
+app.use((req, res, next) => {
+    console.log('Session ID:', req.sessionID);
+    console.log('Session Data:', req.session);
+    next();
+});
+
 app.use('/public', express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, path) => {
         if (path.endsWith('.css')) {
@@ -24,16 +42,10 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
         }
     }
 }));
-const cors = require('cors');
-app.use(cors({
-    origin: 'http://localhost:3000', 
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-// ===== Cấu hình tập tin tĩnh =====
-app.use(express.static(path.join(__dirname, 'src'))); // Chỉ định thư mục tĩnh
+
+// ===== Cấu hình Static Files =====
 app.use('/public', express.static(path.join(__dirname, 'src/public')));
+app.use(express.static(path.join(__dirname, 'src')));
 
 // Thêm các route API công khai cho người dùng
 app.get('/api/loai-phong/list', require('./src/controllers/LoaiPhongController/loaiPhongController').getAllLoaiPhong);
@@ -50,6 +62,7 @@ const profileController = require('./src/controllers/ProfileController/profileCo
 // ===== Nhập các route =====
 const loginRoutes = require('./src/controllers/LoginAdminController/loginAdminRoutes');
 const profileRoutes = require('./src/controllers/ProfileController/profileRoutes');
+const profileUserRoutes = require('./src/controllers/ProfileController/profileUserRoutes');
 const accountsAdminRoutes = require('./src/controllers/AccountsAdminController/accountsAdminRoutes');
 const loginUserRoutes = require('./src/controllers/LoginUserController/loginUserRoutes');
 const loaiPhongRoutes = require('./src/controllers/LoaiPhongController/loaiPhongRoutes');
@@ -58,6 +71,60 @@ const tienNghiPhongRoutes=require('./src/controllers/TienNghiPhongController/tie
 const phongAdminRoutes = require('./src/controllers/PhongAdminController/PhongAdminRoutes');
 const phongUserRoutes = require('./src/controllers/PhongUserController/phongUserRoutes');
 const datPhongRoutes = require('./src/controllers/DatPhongController/datPhongRoutes');
+
+// ===== Public Routes =====
+app.post('/api/user/register', loginUserController.register);
+app.post('/api/user/login', loginUserController.login);
+app.post('/api/user/google-login', loginUserController.googleLogin);
+app.get('/api/user/check-auth', loginUserController.checkAuth);
+
+// Profile route - before auth middleware
+app.get('/api/user/profile', async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized'
+            });
+        }
+
+        // Ensure user data exists and log it
+        console.log('Session user data:', req.session.user);
+        
+        if (!req.session.user.id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user data in session'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                NguoiDungID: req.session.user.id,
+                ten: req.session.user.ten,
+                email: req.session.user.email,
+                soDienThoai: req.session.user.soDienThoai,
+                diaChi: req.session.user.diaChi
+            }
+        });
+    } catch (error) {
+        console.error('Profile fetch error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
+// ===== Auth Middleware - After public routes =====
+app.use('/api/user', checkUserAuth);
+app.use('/api/admin', checkAdminAuth);
+
+// ===== Protected Routes - After auth middleware =====
+app.use('/api/profileUser', profileUserRoutes);
+app.use('/api/dat-phong', datPhongRoutes);
+
 // ===== Các route công khai =====
 // Route xác thực
 app.post('/api/user/register', loginUserController.register); // Đăng ký người dùng
@@ -65,7 +132,7 @@ app.post('/api/user/login', loginUserController.login); // Đăng nhập ngườ
 app.post('/api/user/google-login', loginUserController.googleLogin); // Đăng nhập bằng Google
 app.get('/api/user/check-auth', loginUserController.checkAuth); // Kiểm tra xác thực
 app.use('/api/phong', phongUserRoutes);
-app.use('/api/dat-phong', datPhongRoutes);
+app.use('/api/dat-phong', require('./src/controllers/DatPhongController/datPhongRoutes'));
 // Routes cho User - những route user cần xác thực
 app.use('/api/user/profile', checkUserAuth);
 app.use('/api/user/bookings', checkUserAuth);
@@ -105,6 +172,38 @@ app.get('/api/profileUser/info', profileUserController.getProfileUserInfo); // L
 app.post('/api/profileUser/update', profileUserController.updateProfileUser); // Cập nhật thông tin cá nhân
 app.get('/api/profile/info', checkAdminAuth, profileController.getProfileInfo);
 app.post('/api/profile/update', checkAdminAuth, profileController.updateProfile);
+
+// Add this route before other user routes
+app.get('/api/user/profile', async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized'
+            });
+        }
+
+        // Log session data
+        console.log('Session user data:', req.session.user);
+
+        res.json({
+            success: true,
+            data: {
+                NguoiDungID: req.session.user.id,
+                ten: req.session.user.ten,
+                email: req.session.user.email,
+                soDienThoai: req.session.user.soDienThoai,
+                diaChi: req.session.user.diaChi
+            }
+        });
+    } catch (error) {
+        console.error('Profile fetch error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
 
 // Routes cho User
 app.use('/api/user', checkUserAuth);

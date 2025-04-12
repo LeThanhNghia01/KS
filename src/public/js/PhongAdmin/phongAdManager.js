@@ -135,7 +135,7 @@ class PhongManager {
         const tbody = document.getElementById('roomsTableBody');
         tbody.innerHTML = rooms.map(room => `
             <tr>
-                <td>${room.PhongID}</td>
+                <td>${room.SoPhong}</td> 
                 <td>
                     <div class="room-images-preview" onclick="PhongManager.showAllRoomImages(${room.PhongID})">
                         ${room.ImagePhong ? 

@@ -70,8 +70,8 @@
                     <table class="table table-hover table-striped">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
-                                <th>Hình ảnh (Xem tất cả)</th>
+                                <th>Số phòng</th>
+                                <th>Hình ảnh</th>
                                 <th>Loại phòng</th>
                                 <th>Giá (VNĐ)</th>
                                 <th>Tình trạng</th>
@@ -123,6 +123,10 @@
                             </div>
                         </div>
                         <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="roomNumber" class="form-label">Số phòng <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="roomNumber" required min="1">
+                            </div>
                             <div class="col-md-6">
                                 <label for="roomPrice" class="form-label">Giá phòng (VNĐ) <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="roomPrice" min="0" required>

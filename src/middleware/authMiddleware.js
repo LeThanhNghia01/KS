@@ -1,30 +1,24 @@
-// src/middleware/authMiddleware.js
+const jwt = require('jsonwebtoken');
 
 const checkUserAuth = async (req, res, next) => {
     try {
-        // Kiểm tra cả session và token từ header
-        const token = req.headers.authorization?.split(' ')[1];
-        
-        if (!req.session.user && !token) {
+        if (!req.session.user) {
             return res.status(401).json({
                 isAuthenticated: false,
-                message: 'Vui lòng đăng nhập'
+                message: 'Vui lòng đăng nhập',
+                redirectUrl: '/LoginUser/LoginUser.html'
             });
         }
-        // Nếu có token, kiểm tra token
-        if (token) {
-            const decoded = verifyToken(token); 
-            req.user = decoded;
-        } else {
-            req.user = req.session.user;
-        }
-        
+
+        // Thêm dữ liệu người dùng vào request
+        req.user = req.session.user;
         next();
     } catch (error) {
         console.error('Auth error:', error);
         return res.status(401).json({
             isAuthenticated: false,
-            message: 'Phiên đăng nhập không hợp lệ'
+            message: 'Phiên đăng nhập không hợp lệ',
+            redirectUrl: '/LoginUser/LoginUser.html'
         });
     }
 };

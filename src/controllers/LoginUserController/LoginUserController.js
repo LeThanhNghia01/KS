@@ -37,16 +37,25 @@ const loginUserController = {
                 id: user.NguoiDungID,
                 ten: user.TenNguoiDung,
                 email: user.Email,
-                role: 'user'
+                soDienThoai: user.SoDienThoai,
+                diaChi: user.DiaChi
             };
 
-            res.json({
-                success: true,
-                message: 'Đăng nhập thành công',
-                user: {
-                    ten: user.TenNguoiDung,
-                    email: user.Email
+            // Save session explicitly
+            req.session.save((err) => {
+                if (err) {
+                    console.error('Session save error:', err);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error saving session'
+                    });
                 }
+
+                res.json({
+                    success: true,
+                    message: 'Đăng nhập thành công',
+                    user: req.session.user
+                });
             });
 
         } catch (error) {
