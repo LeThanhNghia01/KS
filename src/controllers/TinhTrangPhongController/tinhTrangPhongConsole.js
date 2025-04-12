@@ -2,6 +2,14 @@
 const db=require('../../config/database');
 
 class TinhtrangPhongConsole{
+    static handleError(error, message) {
+        console.error(`Error: ${message}`, error);
+        return {
+            success: false,
+            message: message
+        };
+    }
+    
     //lay tat cat tinh trang phong
     static async getAllTinhTrangPhong(){
         try{
@@ -12,11 +20,7 @@ class TinhtrangPhongConsole{
                 data:rows
             };
         }catch(error){
-            console.error('Lỗi khi tải danh sách tình trạng phòng:',error);
-            return{
-                success:false,
-                message:'Không thể lấy danh sách loại phòng'
-            };
+            return this.handleError(error, 'Không thể lấy danh sách tình trạng phòng');
         }
     }
     //them tinh trang phong mới

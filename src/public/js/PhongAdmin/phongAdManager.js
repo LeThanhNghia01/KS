@@ -25,11 +25,17 @@ class PhongManager {
     }
     // Thiết lập cho bộ lọc
     static setupFilterHandlers() {
-        const applyFilterBtn = document.getElementById('applyFilter');
-        const resetFilterBtn = document.getElementById('resetFilter');
+        const filters = {
+            applyBtn: document.getElementById('applyFilter'),
+            resetBtn: document.getElementById('resetFilter'),
+            type: document.getElementById('filterRoomType'),
+            status: document.getElementById('filterStatus'),
+            minPrice: document.getElementById('minPrice'),
+            maxPrice: document.getElementById('maxPrice')
+        };
 
-        applyFilterBtn.addEventListener('click', () => this.applyFilters());
-        resetFilterBtn.addEventListener('click', () => this.resetFilters());
+        filters.applyBtn.addEventListener('click', () => this.applyFilters(filters));
+        filters.resetBtn.addEventListener('click', () => this.resetFilters(filters));
     }
     // Áp dụng bộ lọc
     static async applyFilters() {
@@ -263,25 +269,7 @@ class PhongManager {
             }
         });
         // Preview ảnh khi chọn file
-        document.getElementById('roomImage').addEventListener('change', (e) => {
-            const files = e.target.files;// Lấy danh sách file ảnh
-            const imagePreview = document.getElementById('imagePreview');// Lấy thẻ div để hiển thị ảnh
-            imagePreview.innerHTML = '';
-            if (files.length > 0) {// Nếu có chọn ảnh
-                for (let i = 0; i < files.length; i++) {// Duyệt qua từng file ảnh
-                    const reader = new FileReader();// Tạo đối tượng FileReader để đọc file ảnh
-                    // Xử lý khi load xong file ảnh
-                    reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.classList.add('img-thumbnail');// Thêm class img-thumbnail để hiển thị ảnh đẹp hơn
-                        img.style.maxHeight = '200px';
-                        imagePreview.appendChild(img);
-                    }
-                    reader.readAsDataURL(files[i]);
-                }
-            }
-        });
+        this.setupImagePreview('roomImage', 'imagePreview');
     }
     // Thêm hàm editRoom
     static async editRoom(roomId) {
@@ -425,25 +413,7 @@ class PhongManager {
         });
         
         // Preview ảnh khi chọn file trong modal chỉnh sửa
-        document.getElementById('editRoomImage').addEventListener('change', (e) => {
-            const files = e.target.files;
-            const imagePreview = document.getElementById('editImagePreview');
-            imagePreview.innerHTML = '';
-            
-            if (files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.classList.add('img-thumbnail');
-                        img.style.maxHeight = '200px';
-                        imagePreview.appendChild(img);
-                    }
-                    reader.readAsDataURL(files[i]);
-                }
-            }
-        });
+        this.setupImagePreview('editRoomImage', 'editImagePreview');
     }
     // Bổ sung chức năng xóa phòng
     static async deleteRoomImage(imageId) {
@@ -507,6 +477,25 @@ class PhongManager {
                 console.error('Lỗi khi xóa phòng:', error);
                 alert('Đã có lỗi xảy ra khi xóa phòng');
             }
+        });
+    }
+    // 2. Simplify image preview handling 
+    static setupImagePreview(inputId, previewId) {
+        document.getElementById(inputId).addEventListener('change', (e) => {
+            const preview = document.getElementById(previewId);
+            preview.innerHTML = '';
+            
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('img-thumbnail');
+                    img.style.maxHeight = '200px';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
         });
     }
 }

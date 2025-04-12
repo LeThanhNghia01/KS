@@ -206,7 +206,12 @@ const DatPhongManager = {
         });
         
         // Sự kiện nút xác nhận trong modal
-        document.getElementById('processBookingBtn').addEventListener('click', this.processBooking.bind(this));
+        document.getElementById('processBookingBtn').addEventListener('click', () => {
+            this.processBooking().catch(error => {
+                console.error('Error processing booking:', error);
+                alert(error.message || 'Có lỗi xảy ra khi đặt phòng');
+            });
+        });
     },
     
     // Cập nhật tóm tắt đặt phòng
@@ -385,5 +390,38 @@ const DatPhongManager = {
         }
         
         return null;
+    },
+
+    // Add this validation function to the DatPhongManager class
+    validateDates(checkInDate, checkOutDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const checkIn = new Date(checkInDate);
+        const checkOut = new Date(checkOutDate);
+
+        // Check if dates are valid
+        if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+            throw new Error('Ngày nhận phòng hoặc ngày trả phòng không hợp lệ');
+        }
+
+        // Check if check-in date is not in the past
+        if (checkIn < today) {
+            throw new Error('Ngày nhận phòng không thể là ngày trong quá khứ');
+        }
+
+        // Check if check-out date is after check-in date
+        if (checkOut <= checkIn) {
+            throw new Error('Ngày trả phòng phải sau ngày nhận phòng');
+        }
+
+        // Check if booking is not too far in the future (e.g., 1 year)
+        const oneYearFromNow = new Date();
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+        if (checkIn > oneYearFromNow) {
+            throw new Error('Không thể đặt phòng xa quá 1 năm');
+        }
+
+        return true;
     }
 };
