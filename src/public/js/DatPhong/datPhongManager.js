@@ -341,29 +341,31 @@ const DatPhongManager = {
             });
 
             const result = await response.json();
+            
             if (!response.ok) {
                 throw new Error(result.message || 'Đặt phòng thất bại');
             }
 
-            // Xử lý kết quả thành công
-            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('bookingConfirmModal'));
-            if (confirmModal) {
-                confirmModal.hide();
+            // Xử lý chuyển hướng VNPay
+            if (bookingData.PhuongThucThanhToan === 'vnpay' && result.data.paymentUrl) {
+                // Lưu thông tin đặt phòng vào session storage để khôi phục sau khi thanh toán
+                window.location.href = result.data.paymentUrl;
+                sessionStorage.setItem('lastBookingId', result.data.bookingId);
+                sessionStorage.setItem('lastBookingCode', result.data.MaDatPhong);
+
+                // Chuyển hướng đến trang thanh toán VNPay
+                window.location.href = result.data.paymentUrl;
+                return;
             }
 
-            document.getElementById('bookingCode').textContent = result.data.MaDatPhong;
+            // Hiển thị modal thành công cho các phương thức thanh toán khác
             const successModal = new bootstrap.Modal(document.getElementById('bookingSuccessModal'));
+            document.getElementById('bookingCode').textContent = result.data.MaDatPhong;
             successModal.show();
-
-            if (paymentMethod === 'vnpay' && result.data.paymentUrl) {
-                document.getElementById('bookingSuccessModal').addEventListener('hidden.bs.modal', () => {
-                    window.location.href = result.data.paymentUrl;
-                });
-            }
 
         } catch (error) {
             console.error('Error processing booking:', error);
-            alert(error.message);
+            alert(error.message || 'Có lỗi xảy ra khi đặt phòng');
         } finally {
             const processBookingBtn = document.getElementById('processBookingBtn');
             if (processBookingBtn) {

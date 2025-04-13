@@ -1,4 +1,5 @@
 // src/controllers/DatPhongController/datPhongController.js
+require('dotenv').config();
 const db = require('../../config/database');
 const { v4: uuidv4 } = require('uuid');
 const { sendEmail } = require('../../utils/emailService');
@@ -134,8 +135,6 @@ class DatPhongController {
                 'UPDATE Phong SET IDTinhTrang = (SELECT IDTinhTrang FROM TinhTrangPhong WHERE TenTinhTrang = "Đã đặt") WHERE PhongID = ?',
                 [PhongID]
             );
-            // Commit transaction
-            await db.query('COMMIT');
             
             // Lấy thông tin người dùng để gửi email
             const [userData] = await db.query(
@@ -158,21 +157,50 @@ class DatPhongController {
            // Xử lý thanh toán VNPay nếu được chọn
             let paymentUrl = null;
             if (PhuongThucThanhToan === 'vnpay') {
+                if (!process.env.VNP_TMN_CODE || !process.env.VNP_HASH_SECRET) {
+                    throw new Error('Thiếu cấu hình VNPay');
+                }
+                
+                // Thêm log để debug
+                console.log('Creating VNPay URL with:', {
+                    bookingId: result.insertId,
+                    MaDatPhong,
+                    amount: TongTien,
+                    orderInfo: `Thanh toán đặt phòng ${phong[0].TenLoai}`
+                });
+
+                // Kiểm tra các biến môi trường VNPay
+                console.log('VNPay Config:', {
+                    vnp_TmnCode: process.env.VNP_TMN_CODE ? 'Configured' : 'Missing',
+                    vnp_HashSecret: process.env.VNP_HASH_SECRET ? 'Configured' : 'Missing',
+                    vnp_Url: process.env.VNP_URL ? 'Configured' : 'Missing',
+                    vnp_ReturnUrl: process.env.VNP_RETURN_URL ? 'Configured' : 'Missing'
+                });
+                
+                // Tạo URL thanh toán VNPay
                 paymentUrl = await this.createVNPayPaymentUrl(
-                    bookingId,
+                    result.insertId, // bookingId
                     MaDatPhong,
                     TongTien,
                     `Thanh toán đặt phòng ${phong[0].TenLoai}`
                 );
-                
-                if (paymentUrl) {
-                    // Lưu OrderVnPayID
-                    await db.query(
-                        'UPDATE DatPhong SET OrderVnPayID = ? WHERE DatPhongID = ?',
-                        [Date.now(), bookingId]
-                    );
+
+                console.log('Generated VNPay URL:', paymentUrl); // Kiểm tra URL có hợp lệ không
+
+                if (!paymentUrl) {
+                    console.error('Failed to generate VNPay URL');
+                    await db.query('ROLLBACK');
+                    throw new Error('Không thể tạo URL thanh toán VNPay');
                 }
+
+                // Cập nhật trạng thái thanh toán
+                await db.query(
+                    'UPDATE DatPhong SET TrangThaiThanhToan = ? WHERE DatPhongID = ?',
+                    ['pending', result.insertId]
+                );
             }
+
+            await db.query('COMMIT');
             
             return res.status(201).json({
                 success: true,
@@ -180,7 +208,8 @@ class DatPhongController {
                 data: {
                     bookingId,
                     MaDatPhong,
-                    paymentUrl
+                    paymentUrl,
+                    PhuongThucThanhToan
                 }
             });
             
@@ -196,8 +225,7 @@ class DatPhongController {
             
             return res.status(500).json({
                 success: false,
-                message: 'Đã xảy ra lỗi khi xử lý đặt phòng',
-                error: error.message
+                message: error.message || 'Đã xảy ra lỗi khi xử lý đặt phòng'
             });
         }
     }
@@ -260,12 +288,12 @@ class DatPhongController {
             // Format ngày giờ tạo giao dịch
             const date = new Date();
             const createDate = date.toISOString().split('T')[0].split('-').join('') + 
-                               date.toTimeString().split(' ')[0].split(':').join('');
+                             date.toTimeString().split(' ')[0].split(':').join('');
             
             // Tạo mã giao dịch VNPay
-            const orderId = MaDatPhong + date.getTime();
+            const orderId = `${MaDatPhong}${date.getTime()}`;
             
-            // Tạo params cho VNPay URL
+            // Tạo params cho VNPay URL với các giá trị đã được làm sạch
             const vnp_Params = {
                 vnp_Version: '2.1.0',
                 vnp_Command: 'pay',
@@ -273,37 +301,38 @@ class DatPhongController {
                 vnp_Locale: 'vn',
                 vnp_CurrCode: 'VND',
                 vnp_TxnRef: orderId,
-                vnp_OrderInfo: orderInfo,
+                vnp_OrderInfo: orderInfo.replace(/[^\w\s-]/g, ''), // Loại bỏ ký tự đặc biệt
                 vnp_OrderType: 'billpayment',
-                vnp_Amount: amount * 100, // Nhân 100 vì VNPay làm việc với đơn vị 100 đồng
-                vnp_ReturnUrl: `${vnp_ReturnUrl}?bookingId=${bookingId}`,
-                vnp_IpAddr: '127.0.0.1', // IP của người dùng, có thể lấy từ request
+                vnp_Amount: Math.round(amount * 100), // Đảm bảo số nguyên
+                vnp_ReturnUrl: `${vnp_ReturnUrl}?bookingId=${encodeURIComponent(bookingId)}`,
+                vnp_IpAddr: '127.0.0.1',
                 vnp_CreateDate: createDate
             };
             
-            // Sắp xếp các params theo thứ tự alphabet (yêu cầu của VNPay)
+            // Sắp xếp các params theo thứ tự alphabet
             const sortedParams = {};
             Object.keys(vnp_Params).sort().forEach(key => {
                 sortedParams[key] = vnp_Params[key];
             });
             
-            // Import crypto library
-            const crypto = require('crypto');
-            
-            // Tạo chuỗi ký tự để tính hmac
+            // Tạo chuỗi ký tự để tính hmac với mã hóa đúng
             const signData = Object.keys(sortedParams)
                 .map(key => `${key}=${encodeURIComponent(sortedParams[key])}`)
                 .join('&');
             
+            // Log để debug
+            console.log('Signing data:', signData);
+            
             // Tạo chữ ký hmac
+            const crypto = require('crypto');
             const hmac = crypto.createHmac('sha512', vnp_HashSecret);
             const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
             
-            // Thêm chữ ký vào params
-            const finalUrl = vnp_Url + '?' + signData + '&vnp_SecureHash=' + signed;
+            // Tạo URL cuối cùng
+            const finalUrl = `${vnp_Url}?${signData}&vnp_SecureHash=${signed}`;
             
-            // Log URL thanh toán để debug
-            console.log('Generated VNPay URL:', finalUrl);
+            // Log URL cuối cùng để debug
+            console.log('Final VNPay URL:', finalUrl);
             
             return finalUrl;
         } catch (error) {
@@ -585,6 +614,72 @@ class DatPhongController {
         } catch (error) {
             console.error('Error handling VNPay return:', error);
             return res.redirect('/payment-error');
+        }
+    }
+
+    async handleVNPayReturn(req, res) {
+        try {
+            const vnp_Params = req.query;
+            const secureHash = vnp_Params['vnp_SecureHash'];
+            
+            // Xóa các tham số không cần thiết
+            delete vnp_Params['vnp_SecureHash'];
+            delete vnp_Params['vnp_SecureHashType'];
+
+            // Sắp xếp các tham số theo thứ tự alphabet
+            const sortedParams = {};
+            Object.keys(vnp_Params).sort().forEach((key) => {
+                sortedParams[key] = vnp_Params[key];
+            });
+
+            // Tạo chuỗi ký tự để kiểm tra
+            const signData = Object.keys(sortedParams)
+                .map(key => `${key}=${sortedParams[key]}`)
+                .join('&');
+
+            const crypto = require('crypto');    
+            const hmac = crypto.createHmac("sha512", process.env.VNP_HASH_SECRET);
+            const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
+
+            // Kiểm tra chữ ký
+            if(secureHash === signed){
+                // Kiểm tra kết quả giao dịch
+                const orderId = vnp_Params['vnp_TxnRef'];
+                const rspCode = vnp_Params['vnp_ResponseCode'];
+
+                // Nếu thanh toán thành công
+                if(rspCode === '00') {
+                    // Cập nhật trạng thái đặt phòng
+                    await db.query(
+                        `UPDATE DatPhong 
+                         SET TrangThaiThanhToan = 'paid', 
+                             TrangThai = 'confirmed'
+                         WHERE MaDatPhong = ?`,
+                        [orderId]
+                    );
+
+                    // Chuyển hướng về trang thành công
+                    return res.redirect('/booking-success?code=' + orderId);
+                } else {
+                    // Cập nhật trạng thái thất bại
+                    await db.query(
+                        `UPDATE DatPhong 
+                         SET TrangThaiThanhToan = 'failed', 
+                             TrangThai = 'cancelled'
+                         WHERE MaDatPhong = ?`,
+                        [orderId]
+                    );
+
+                    // Chuyển hướng về trang thất bại
+                    return res.redirect('/booking-failed?code=' + orderId);
+                }
+            } else {
+                // Chữ ký không hợp lệ
+                return res.redirect('/booking-failed?error=invalid_signature');
+            }
+        } catch (error) {
+            console.error('Error handling VNPay return:', error);
+            return res.redirect('/booking-failed?error=system_error');
         }
     }
 }

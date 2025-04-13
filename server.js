@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -263,3 +264,38 @@ app.get('/api/auth/check-status', (req, res) => {
     }
 });
 require('events').EventEmitter.defaultMaxListeners = 15;
+
+// Thêm route callback VNPay với xử lý chi tiết hơn
+app.get('/api/vnpay/callback', async (req, res) => {
+    try {
+        // Log request parameters để debug
+        console.log('VNPay callback received:', {
+            params: req.query,
+            timestamp: new Date().toISOString()
+        });
+
+        const datPhongController = require('./src/controllers/DatPhongController/datPhongController');
+        
+        // Kiểm tra parameters bắt buộc
+        const requiredParams = ['vnp_ResponseCode', 'vnp_TxnRef', 'vnp_SecureHash'];
+        const missingParams = requiredParams.filter(param => !req.query[param]);
+        
+        if (missingParams.length > 0) {
+            console.error('Missing required VNPay parameters:', missingParams);
+            return res.redirect('/payment-error?reason=missing_params');
+        }
+
+        // Xử lý callback
+        await datPhongController.handleVNPayReturn(req, res);
+        
+    } catch (error) {
+        console.error('Error handling VNPay callback:', {
+            error: error.message,
+            stack: error.stack,
+            params: req.query
+        });
+        
+        // Chuyển hướng với mã lỗi cụ thể
+        res.redirect(`/payment-error?error=${encodeURIComponent(error.message)}`);
+    }
+});
