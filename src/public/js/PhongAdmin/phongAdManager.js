@@ -167,7 +167,9 @@ class PhongManager {
                     <button class="btn btn-sm btn-warning me-1" onclick="PhongManager.editRoom(${room.PhongID})">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="PhongManager.deleteRoom(${room.PhongID})">
+                    <button class="btn btn-sm btn-danger ${room.TenTinhTrang !== 'Trống' ? 'disabled' : ''}" 
+                            onclick="PhongManager.deleteRoom(${room.PhongID})"
+                            ${room.TenTinhTrang !== 'Trống' ? 'title="Chỉ có thể xóa phòng ở trạng thái Trống"' : ''}>
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -497,6 +499,50 @@ class PhongManager {
                 reader.readAsDataURL(file);
             });
         });
+    }
+    static async deleteRoom(roomId) {
+        try {
+            // Trước tiên kiểm tra tình trạng phòng
+            const response = await fetch(`/api/phong-admin/detail/${roomId}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                alert('Không thể lấy thông tin phòng');
+                return;
+            }
+            
+            // Lấy thông tin tình trạng phòng từ dữ liệu
+            const roomStatus = data.data.IDTinhTrang;
+            const [statusInfo] = await fetch(`/api/tinh-trang-phong/detail/${roomStatus}`)
+                .then(res => res.json())
+                .then(data => data.success ? data.data : null);
+                
+            if (!statusInfo || statusInfo.TenTinhTrang !== 'Trống') {
+                alert('Chỉ có thể xóa phòng khi phòng ở trạng thái Trống');
+                return;
+            }
+            
+            // Nếu phòng trống, tiếp tục với quy trình xóa
+            const roomIdInput = document.getElementById('roomIdToDelete');
+            if (!roomIdInput) {
+                console.error('Could not find roomIdToDelete element');
+                return;
+            }
+            roomIdInput.value = roomId;
+    
+            // Get and show the delete confirmation modal
+            const deleteModal = document.getElementById('deleteRoomModal');
+            if (!deleteModal) {
+                console.error('Could not find deleteRoomModal element');
+                return;
+            }
+    
+            const modal = new bootstrap.Modal(deleteModal);
+            modal.show();
+        } catch (error) {
+            console.error('Error checking room status:', error);
+            alert('Có lỗi xảy ra khi kiểm tra tình trạng phòng');
+        }
     }
 }
 // Khởi tạo khi trang load xong

@@ -369,9 +369,12 @@ class PhongAdminController {
                 });
             }
             
-            // Check if room exists
+            // Check if room exists and get its status
             const [rooms] = await db.execute(
-                `SELECT * FROM Phong WHERE PhongID = ? AND is_deleted = FALSE`,
+                `SELECT p.*, ttp.TenTinhTrang 
+                 FROM Phong p
+                 LEFT JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
+                 WHERE p.PhongID = ? AND p.is_deleted = FALSE`,
                 [roomId]
             );
             
@@ -379,6 +382,14 @@ class PhongAdminController {
                 return res.status(404).json({
                     success: false,
                     message: 'Không tìm thấy phòng'
+                });
+            }
+            
+            // Check if room status is "Trống"
+            if (rooms[0].TenTinhTrang !== 'Trống') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Chỉ có thể xóa phòng khi phòng ở trạng thái Trống'
                 });
             }
             
@@ -460,6 +471,14 @@ class PhongAdminController {
                 error: error.message
             });
         }
+    }
+    static deleteRoom(roomId) {
+        // Set the room ID in the hidden input for reference in the confirmation modal
+        document.getElementById('roomIdToDelete').value = roomId;
+        
+        // Show the confirmation modal
+        const modal = new bootstrap.Modal(document.getElementById('deleteRoomModal'));
+        modal.show();
     }
 }
 
