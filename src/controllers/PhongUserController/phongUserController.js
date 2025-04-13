@@ -16,7 +16,7 @@ class PhongUserController {
             const maxPrice = req.query.maxPrice ? parseInt(req.query.maxPrice) : 0;
             
             // Build WHERE clause for filtering
-            let whereClause = 'p.is_deleted = 0';
+            let whereClause = 'p.is_deleted = 0 AND p.IDTinhTrang = 1'; 
             const queryParams = [];
             
             // Add loaiPhong filter if provided
@@ -99,13 +99,13 @@ class PhongUserController {
             
             // Lấy thông tin phòng
             const roomQuery = `
-                SELECT p.PhongID, p.Gia, p.IDLoai, p.IDTinhTrang, 
-                       lp.TenLoai, ttp.TenTinhTrang
-                FROM Phong p
-                JOIN LoaiPhong lp ON p.IDLoai = lp.IDLoai
-                JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
-                WHERE p.PhongID = ? AND p.is_deleted = 0
-            `;
+            SELECT p.PhongID, p.Gia, p.IDLoai, p.IDTinhTrang, 
+                   lp.TenLoai, ttp.TenTinhTrang
+            FROM Phong p
+            JOIN LoaiPhong lp ON p.IDLoai = lp.IDLoai
+            JOIN TinhTrangPhong ttp ON p.IDTinhTrang = ttp.IDTinhTrang
+            WHERE p.PhongID = ? AND p.is_deleted = 0 AND p.IDTinhTrang = 1
+        `;
             
             // Sử dụng db.query trực tiếp vì db đã là promise pool
             const [rooms] = await db.query(roomQuery, [phongId]);
