@@ -1,42 +1,6 @@
 //src/controllers/ProfileController/profileUserController.js
 const db = require('../../config/database');
-const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        const uploadDir = path.join(__dirname, '../../public/uploads/users');
-        // Create directory if it doesn't exist
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: function(req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        cb(null, 'user-' + uniqueSuffix + ext);
-    }
-});
-
-// File filter for images
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-    } else {
-        cb(new Error('Chỉ chấp nhận file hình ảnh!'), false);
-    }
-};
-
-const upload = multer({ 
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
-    }
-});
 
 class ProfileUserController {
     static async getProfileUserInfo(req, res) {
@@ -50,7 +14,7 @@ class ProfileUserController {
 
             const userId = req.session.user.NguoiDungID;
             const [userData] = await db.execute(
-                'SELECT NguoiDungID, TenNguoiDung, Email, SoDienThoai, DiaChi FROM NguoiDung WHERE NguoiDungID = ?',
+                'SELECT NguoiDungID, TenNguoiDung AS Ten, Email, SoDienThoai, DiaChi FROM NguoiDung WHERE NguoiDungID = ?',
                 [userId]
             );
 
@@ -61,13 +25,11 @@ class ProfileUserController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: userData[0]
-            });
+            // Return user data directly without nested structure
+            return res.json(userData[0]);
         } catch (error) {
             console.error('Error fetching user profile:', error);
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: 'Đã xảy ra lỗi khi lấy thông tin người dùng'
             });
@@ -83,14 +45,12 @@ class ProfileUserController {
             console.log('Headers:', req.headers);
             console.log('Body data received:', req.body);
             
-            // Get data from request body
-            let { ten, soDienThoai, diaChi, anhDaiDienCu } = req.body;
+            let { ten, soDienThoai, diaChi } = req.body;
             
-            // If data is missing, get from database
             if (!ten || ten.trim() === '') {
                 const [userData] = await db.query(
                     'SELECT TenNguoiDung FROM NguoiDung WHERE NguoiDungID = ?',
-                    [req.session.user.id]
+                    [req.session.user.NguoiDungID]
                 );
                 
                 if (userData.length > 0) {
@@ -100,33 +60,7 @@ class ProfileUserController {
                 }
             }
             
-            // Prepare update data
-            let imageUpdateQuery = '';
-            let queryParams = [ten, soDienThoai || null, diaChi || null];
-            
-            // Handle profile image if exists
-            if (req.file) {
-                const imageUrl = `/uploads/users/${req.file.filename}`;
-                imageUpdateQuery = ', AnhDaiDien = ?';
-                queryParams.push(imageUrl);
-                
-                // Get old image to delete if exists
-                const [oldImage] = await db.query(
-                    'SELECT AnhDaiDien FROM NguoiDung WHERE NguoiDungID = ?',
-                    [req.session.user.id]
-                );
-                
-                // Delete old image if exists and isn't from Google
-                if (oldImage.length > 0 && oldImage[0].AnhDaiDien && !oldImage[0].AnhDaiDien.startsWith('http')) {
-                    const oldImagePath = path.join(__dirname, '../../public', oldImage[0].AnhDaiDien);
-                    if (fs.existsSync(oldImagePath)) {
-                        fs.unlinkSync(oldImagePath);
-                    }
-                }
-            }
-            
-            // Add user ID to parameters
-            queryParams.push(req.session.user.id);
+            let queryParams = [ten, soDienThoai || null, diaChi || null, req.session.user.NguoiDungID];
             
             console.log('Final SQL query parameters:', queryParams);
             
@@ -135,31 +69,26 @@ class ProfileUserController {
                 TenNguoiDung = ?, 
                 SoDienThoai = ?, 
                 DiaChi = ?
-                ${imageUpdateQuery}
                 WHERE NguoiDungID = ?`,
                 queryParams
             );
             
             console.log('Update result:', result);
             
-            // Check if update was successful
             if (result.affectedRows > 0) {
-                res.json({
+                return res.json({
+                    success: true,
                     message: 'Cập nhật thông tin thành công',
-                    affectedRows: result.affectedRows,
-                    changedRows: result.changedRows
+                    affectedRows: result.affectedRows
                 });
             } else {
-                res.status(400).json({message: 'Không tìm thấy người dùng để cập nhật'});
+                return res.status(400).json({message: 'Không tìm thấy người dùng để cập nhật'});
             }
         } catch (error) {
             console.error('Chi tiết lỗi:', error);
-            res.status(500).json({message: 'Lỗi server: ' + error.message});
+            return res.status(500).json({message: 'Lỗi server: ' + error.message});
         }
     }
-
-    // Middleware for handling the file upload
-    static uploadMiddleware = upload.single('anhDaiDien');
 }
 
 module.exports = ProfileUserController;
