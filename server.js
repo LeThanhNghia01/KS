@@ -60,7 +60,6 @@ const phongUserRoutes = require('./src/controllers/PhongUserController/phongUser
 const datPhongRoutes = require('./src/controllers/DatPhongController/datPhongRoutes');
 const profileUserRoutes = require('./src/controllers/ProfileController/profileUserRoutes'); 
 const userProfileRoutes = require('./src/controllers/LoginUserController/userProfileRoutes');
-app.use('/api/user', userProfileRoutes);
 // ===== Các route công khai =====
 // Route xác thực
 app.post('/api/user/register', loginUserController.register); // Đăng ký người dùng
@@ -70,8 +69,6 @@ app.get('/api/user/check-auth', loginUserController.checkAuth); // Kiểm tra x�
 app.use('/api/phong', phongUserRoutes);
 app.use('/api/dat-phong', datPhongRoutes);
 // Routes cho User - những route user cần xác thực
-app.use('/api/user/profile', checkUserAuth);
-app.get('/api/user/profile', checkUserAuth, profileUserController.getProfileUserInfo);
 app.use('/api/user/bookings', checkUserAuth);
 // Route đăng nhập admin không cần middleware auth
 app.post('/api/admin/login', loginAdminController.loginAdmin);
@@ -233,11 +230,12 @@ app.get('/TinhTrangPhong/QuanLyTinhTrangPhong.html',checkAdminAuth,(req,res)=>{
 app.get('/TienNghiPhong/TienNghiPhongManager.html',checkAdminAuth,(req,res)=>{
     res.sendFile(path.join(__dirname,'src/view/TienNghiPhong/TienNghiPhongManager.html'));
 });
-
-// Sử dụng route mới
-app.use('/api/user', profileUserRoutes);
-app.use('/api/profileUser', profileUserRoutes);
-
+app.get('/api/profileUser/info', checkUserAuth, (req, res) => {
+    profileUserController.getProfileUserInfo(req, res);
+});
+app.post('/api/profileUser/update', checkUserAuth, (req, res) => {
+    profileUserController.updateProfileUser(req, res);
+});
 // ===== Khởi chạy Server =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
