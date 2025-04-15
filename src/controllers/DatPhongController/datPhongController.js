@@ -196,7 +196,7 @@ class DatPhongController {
                 // Cập nhật trạng thái thanh toán
                 await db.query(
                     'UPDATE DatPhong SET TrangThaiThanhToan = ? WHERE DatPhongID = ?',
-                    ['pending', result.insertId]
+                    ['unpaid', result.insertId]
                 );
             }
 
@@ -557,66 +557,6 @@ class DatPhongController {
         }
     }
     
-    // API xử lý callback từ VNPay
-    async handleVNPayReturn(req, res) {
-        try {
-            const vnp_Params = req.query;
-            const bookingId = vnp_Params.bookingId;
-            
-            // Import crypto library
-            const crypto = require('crypto');
-            
-            // Lấy config VNPay từ biến môi trường
-            const vnp_HashSecret = process.env.VNP_HASH_SECRET;
-            
-            // Xóa chữ ký từ query params
-            const secureHash = vnp_Params['vnp_SecureHash'];
-            delete vnp_Params['vnp_SecureHash'];
-            delete vnp_Params['vnp_SecureHashType'];
-            
-            // Sắp xếp các params theo thứ tự alphabet
-            const sortedParams = {};
-            Object.keys(vnp_Params).sort().forEach(key => {
-                sortedParams[key] = vnp_Params[key];
-            });
-            
-            // Tạo chuỗi ký tự để tính hmac
-            const signData = Object.keys(sortedParams)
-                .map(key => `${key}=${sortedParams[key]}`)
-                .join('&');
-            
-            // Tạo chữ ký hmac để kiểm tra
-            const hmac = crypto.createHmac('sha512', vnp_HashSecret);
-            const calculatedHash = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
-            
-            // Kiểm tra chữ ký
-            if (secureHash !== calculatedHash) {
-                console.error('Invalid VNPay signature');
-                return res.redirect('/payment-error');
-            }
-            
-            // Kiểm tra kết quả giao dịch
-            const vnp_ResponseCode = vnp_Params['vnp_ResponseCode'];
-            
-            if (vnp_ResponseCode === '00') {
-                // Giao dịch thành công, cập nhật trạng thái thanh toán
-                await db.query(
-                    'UPDATE DatPhong SET TrangThaiThanhToan = ? WHERE DatPhongID = ?',
-                    ['paid', bookingId]
-                );
-                
-                return res.redirect('/payment-success');
-            } else {
-                // Giao dịch thất bại
-                console.error(`VNPay payment failed with code: ${vnp_ResponseCode}`);
-                return res.redirect('/payment-error');
-            }
-        } catch (error) {
-            console.error('Error handling VNPay return:', error);
-            return res.redirect('/payment-error');
-        }
-    }
-
     async handleVNPayReturn(req, res) {
         try {
             const vnp_Params = req.query;

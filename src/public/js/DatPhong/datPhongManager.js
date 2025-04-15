@@ -206,12 +206,7 @@ const DatPhongManager = {
         });
         
         // Sự kiện nút xác nhận trong modal
-        document.getElementById('processBookingBtn').addEventListener('click', () => {
-            this.processBooking().catch(error => {
-                console.error('Error processing booking:', error);
-                alert(error.message || 'Có lỗi xảy ra khi đặt phòng');
-            });
-        });
+        document.getElementById('processBookingBtn').addEventListener('click', this.processBooking.bind(this));
     },
     
     // Cập nhật tóm tắt đặt phòng
@@ -256,34 +251,23 @@ const DatPhongManager = {
     },
     async fetchUserDetails() {
         try {
-            // Kiểm tra session trước
-            const authResponse = await fetch('/api/user/check-auth', {
+            const response = await fetch('/api/profileUser/info', {
                 credentials: 'include'
             });
-            const authData = await authResponse.json();
-
-            if (!authData.isAuthenticated) {
-                throw new Error('Vui lòng đăng nhập để tiếp tục');
-            }
-
-            // Lấy thông tin chi tiết người dùng
-            const response = await fetch('/api/user/profile', {
-                credentials: 'include'
-            });
-
+    
             if (!response.ok) {
-                throw new Error('Không thể lấy thông tin người dùng');
+                throw new Error('Không thể kết nối đến server');
             }
-
+    
             const userData = await response.json();
-            console.log('User profile response:', userData);
-
-            if (!userData.success || !userData.data) {
+            console.log("User profile response:", userData);
+    
+            if (userData && userData.NguoiDungID && userData.TenNguoiDung && userData.Email) {
+                return userData;
+            } else {
                 throw new Error('Dữ liệu người dùng không hợp lệ');
             }
-
-            return userData.data;
-
+    
         } catch (error) {
             console.error('Error fetching user details:', error);
             throw new Error('Không thể lấy thông tin người dùng. Vui lòng đăng nhập lại.');
@@ -292,6 +276,7 @@ const DatPhongManager = {
     // Xử lý đặt phòng
     async processBooking() {
         try {
+            const userDetails = await this.fetchUserDetails();
             const processBookingBtn = document.getElementById('processBookingBtn');
             processBookingBtn.disabled = true;
             processBookingBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
@@ -341,31 +326,29 @@ const DatPhongManager = {
             });
 
             const result = await response.json();
-            
             if (!response.ok) {
                 throw new Error(result.message || 'Đặt phòng thất bại');
             }
 
-            // Xử lý chuyển hướng VNPay
-            if (bookingData.PhuongThucThanhToan === 'vnpay' && result.data.paymentUrl) {
-                // Lưu thông tin đặt phòng vào session storage để khôi phục sau khi thanh toán
-                window.location.href = result.data.paymentUrl;
-                sessionStorage.setItem('lastBookingId', result.data.bookingId);
-                sessionStorage.setItem('lastBookingCode', result.data.MaDatPhong);
-
-                // Chuyển hướng đến trang thanh toán VNPay
-                window.location.href = result.data.paymentUrl;
-                return;
+            // Xử lý kết quả thành công
+            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('bookingConfirmModal'));
+            if (confirmModal) {
+                confirmModal.hide();
             }
 
-            // Hiển thị modal thành công cho các phương thức thanh toán khác
-            const successModal = new bootstrap.Modal(document.getElementById('bookingSuccessModal'));
             document.getElementById('bookingCode').textContent = result.data.MaDatPhong;
+            const successModal = new bootstrap.Modal(document.getElementById('bookingSuccessModal'));
             successModal.show();
+
+            if (paymentMethod === 'vnpay' && result.data.paymentUrl) {
+                document.getElementById('bookingSuccessModal').addEventListener('hidden.bs.modal', () => {
+                    window.location.href = result.data.paymentUrl;
+                });
+            }
 
         } catch (error) {
             console.error('Error processing booking:', error);
-            alert(error.message || 'Có lỗi xảy ra khi đặt phòng');
+            throw error;
         } finally {
             const processBookingBtn = document.getElementById('processBookingBtn');
             if (processBookingBtn) {
@@ -394,36 +377,21 @@ const DatPhongManager = {
         return null;
     },
 
-    // Add this validation function to the DatPhongManager class
     validateDates(checkInDate, checkOutDate) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
+        // Chuyển đổi chuỗi ngày thành đối tượng Date
         const checkIn = new Date(checkInDate);
         const checkOut = new Date(checkOutDate);
-
-        // Check if dates are valid
-        if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
-            throw new Error('Ngày nhận phòng hoặc ngày trả phòng không hợp lệ');
-        }
-
-        // Check if check-in date is not in the past
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         if (checkIn < today) {
-            throw new Error('Ngày nhận phòng không thể là ngày trong quá khứ');
+            return false;
         }
-
-        // Check if check-out date is after check-in date
+        
         if (checkOut <= checkIn) {
-            throw new Error('Ngày trả phòng phải sau ngày nhận phòng');
+            return false;
         }
-
-        // Check if booking is not too far in the future (e.g., 1 year)
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-        if (checkIn > oneYearFromNow) {
-            throw new Error('Không thể đặt phòng xa quá 1 năm');
-        }
-
-        return true;
+        
+        return true; 
     }
 };
