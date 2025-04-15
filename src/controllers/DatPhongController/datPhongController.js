@@ -290,10 +290,10 @@ class DatPhongController {
             const createDate = date.toISOString().split('T')[0].split('-').join('') + 
                              date.toTimeString().split(' ')[0].split(':').join('');
             
-            // Tạo mã giao dịch VNPay
-            const orderId = `${MaDatPhong}${date.getTime()}`;
+            // Tạo mã giao dịch VNPay - chỉ sử dụng timestamp để tránh ký tự đặc biệt
+            const orderId = `${date.getTime()}`;
             
-            // Tạo params cho VNPay URL với các giá trị đã được làm sạch
+            // Tạo params cho VNPay URL
             const vnp_Params = {
                 vnp_Version: '2.1.0',
                 vnp_Command: 'pay',
@@ -301,13 +301,19 @@ class DatPhongController {
                 vnp_Locale: 'vn',
                 vnp_CurrCode: 'VND',
                 vnp_TxnRef: orderId,
-                vnp_OrderInfo: orderInfo.replace(/[^\w\s-]/g, ''), // Loại bỏ ký tự đặc biệt
+                vnp_OrderInfo: `Thanh toan dat phong ${bookingId}`, // Đơn giản hóa thông tin đơn hàng
                 vnp_OrderType: 'billpayment',
                 vnp_Amount: Math.round(amount * 100), // Đảm bảo số nguyên
-                vnp_ReturnUrl: `${vnp_ReturnUrl}?bookingId=${encodeURIComponent(bookingId)}`,
+                vnp_ReturnUrl: `${vnp_ReturnUrl}?bookingId=${bookingId}`,
                 vnp_IpAddr: '127.0.0.1',
                 vnp_CreateDate: createDate
             };
+            
+            // Lưu liên kết giữa orderId và MaDatPhong vào cơ sở dữ liệu để tra cứu sau này
+            await db.query(
+                'UPDATE DatPhong SET VNPayOrderId = ? WHERE DatPhongID = ?',
+                [orderId, bookingId]
+            );
             
             // Sắp xếp các params theo thứ tự alphabet
             const sortedParams = {};
@@ -315,20 +321,21 @@ class DatPhongController {
                 sortedParams[key] = vnp_Params[key];
             });
             
-            // Tạo chuỗi ký tự để tính hmac với mã hóa đúng
-            const signData = Object.keys(sortedParams)
-                .map(key => `${key}=${encodeURIComponent(sortedParams[key])}`)
-                .join('&');
+            // Tạo chuỗi ký tự để tính hmac - sử dụng querystring không mã hóa
+            const querystring = require('querystring');
+            const signData = querystring.stringify(sortedParams, '&', '=', {
+                encodeURIComponent: (str) => str
+            });
             
             // Log để debug
-            console.log('Signing data:', signData);
+            console.log('Raw signing data:', signData);
             
             // Tạo chữ ký hmac
             const crypto = require('crypto');
             const hmac = crypto.createHmac('sha512', vnp_HashSecret);
             const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
             
-            // Tạo URL cuối cùng
+            // Tạo URL cuối cùng - sử dụng chuỗi query không mã hóa và thêm chữ ký
             const finalUrl = `${vnp_Url}?${signData}&vnp_SecureHash=${signed}`;
             
             // Log URL cuối cùng để debug
@@ -565,28 +572,33 @@ class DatPhongController {
             // Xóa các tham số không cần thiết
             delete vnp_Params['vnp_SecureHash'];
             delete vnp_Params['vnp_SecureHashType'];
-
+    
             // Sắp xếp các tham số theo thứ tự alphabet
             const sortedParams = {};
             Object.keys(vnp_Params).sort().forEach((key) => {
                 sortedParams[key] = vnp_Params[key];
             });
-
-            // Tạo chuỗi ký tự để kiểm tra
-            const signData = Object.keys(sortedParams)
-                .map(key => `${key}=${sortedParams[key]}`)
-                .join('&');
-
+    
+            // Tạo chuỗi ký tự để kiểm tra - sử dụng querystring không mã hóa
+            const querystring = require('querystring');
+            const signData = querystring.stringify(sortedParams, '&', '=', {
+                encodeURIComponent: (str) => str
+            });
+    
+            // Tạo chữ ký hmac
             const crypto = require('crypto');    
             const hmac = crypto.createHmac("sha512", process.env.VNP_HASH_SECRET);
             const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-
+    
             // Kiểm tra chữ ký
             if(secureHash === signed){
                 // Kiểm tra kết quả giao dịch
                 const orderId = vnp_Params['vnp_TxnRef'];
                 const rspCode = vnp_Params['vnp_ResponseCode'];
-
+    
+                // Lấy bookingId từ tham số hoặc tìm kiếm dựa trên orderId
+                const bookingId = req.query.bookingId || await this.getBookingIdFromVNPayOrderId(orderId);
+    
                 // Nếu thanh toán thành công
                 if(rspCode === '00') {
                     // Cập nhật trạng thái đặt phòng
@@ -594,32 +606,53 @@ class DatPhongController {
                         `UPDATE DatPhong 
                          SET TrangThaiThanhToan = 'paid', 
                              TrangThai = 'confirmed'
-                         WHERE MaDatPhong = ?`,
-                        [orderId]
+                         WHERE DatPhongID = ?`,
+                        [bookingId]
                     );
-
+    
                     // Chuyển hướng về trang thành công
-                    return res.redirect('/booking-success?code=' + orderId);
+                    return res.redirect('/booking-success?id=' + bookingId);
                 } else {
                     // Cập nhật trạng thái thất bại
                     await db.query(
                         `UPDATE DatPhong 
                          SET TrangThaiThanhToan = 'failed', 
                              TrangThai = 'cancelled'
-                         WHERE MaDatPhong = ?`,
-                        [orderId]
+                         WHERE DatPhongID = ?`,
+                        [bookingId]
                     );
-
+    
                     // Chuyển hướng về trang thất bại
-                    return res.redirect('/booking-failed?code=' + orderId);
+                    return res.redirect('/booking-failed?id=' + bookingId);
                 }
             } else {
                 // Chữ ký không hợp lệ
+                console.error('Invalid VNPay signature');
+                console.log('Expected:', signed);
+                console.log('Received:', secureHash);
                 return res.redirect('/booking-failed?error=invalid_signature');
             }
         } catch (error) {
             console.error('Error handling VNPay return:', error);
             return res.redirect('/booking-failed?error=system_error');
+        }
+    }
+    
+    // Hàm mới để tìm bookingId từ orderId
+    async getBookingIdFromVNPayOrderId(orderId) {
+        try {
+            const [result] = await db.query(
+                'SELECT DatPhongID FROM DatPhong WHERE VNPayOrderId = ?',
+                [orderId]
+            );
+            
+            if (result && result.length > 0) {
+                return result[0].DatPhongID;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error finding booking from VNPay orderId:', error);
+            return null;
         }
     }
 }
